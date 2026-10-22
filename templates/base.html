@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Daily course{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    header.bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+    }
+    header.bar form,
+    header.bar button {
+      width: auto;
+      margin-bottom: 0;
+    }
+    form.action button {
+      width: 100%;
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    .course-content {
+      overflow-wrap: anywhere;
+    }
+    .course-content img,
+    .course-content video,
+    .course-content iframe {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    {% if current_user.is_authenticated %}
+    <header class="bar">
+      <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="secondary outline">Log out</button>
+      </form>
+    </header>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

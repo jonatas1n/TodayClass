@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Day {{ course.day }}{% endblock %}
+{% block content %}
+<h1>Day {{ course.day }}</h1>
+<article class="course-content">
+  {{ course.content|safe }}
+</article>
+{% if course.links %}
+<h2>Links</h2>
+<ul>
+  {% for link in course.links %}
+  <li><a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.title }}</a></li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if course.is_completed %}
+<p>
+  Completed
+  {% if course.completed_at %}
+  on {{ course.completed_at.strftime('%Y-%m-%d %H:%M') }} UTC
+  {% endif %}
+</p>
+{% elif current_user.role == 'student' %}
+<form class="action" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <button type="submit">Mark as Done</button>
+</form>
+{% else %}
+<p>Not completed yet.</p>
+{% endif %}
+{% endblock %}

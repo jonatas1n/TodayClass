@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Progress{% endblock %}
+{% block content %}
+<h1>Progress</h1>
+{% if error %}
+<p role="alert">{{ error }}</p>
+{% endif %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Status</th>
+        <th>Completed at</th>
+        <th>Links</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for course in courses %}
+      <tr>
+        <td><a href="{{ url_for('view_course', day_id=course.day) }}">{{ course.day }}</a></td>
+        <td>{{ 'Completed' if course.is_completed else 'Pending' }}</td>
+        <td>
+          {% if course.completed_at %}
+          {{ course.completed_at.strftime('%Y-%m-%d %H:%M') }} UTC
+          {% else %}
+          —
+          {% endif %}
+        </td>
+        <td>{{ course.links|length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Users</h2>
+{% for user in users %}
+<article>
+  <header>{{ user.username }} — {{ user.role }}</header>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="action" value="reset_password">
+    <input type="hidden" name="user_id" value="{{ user.id }}">
+    <label>
+      New password
+      <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <button type="submit" class="secondary">Set password</button>
+  </form>
+</article>
+{% endfor %}
+
+<h2>New login</h2>
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <input type="hidden" name="action" value="create_user">
+  <label>
+    Username
+    <input type="text" name="username" autocomplete="username" maxlength="80" required>
+  </label>
+  <label>
+    Password
+    <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+  </label>
+  <label>
+    Role
+    <select name="role" required>
+      <option value="student" selected>student</option>
+      <option value="admin">admin</option>
+    </select>
+  </label>
+  <button type="submit">Create login</button>
+</form>
+{% endblock %}

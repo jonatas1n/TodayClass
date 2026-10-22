@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<h1>Log in</h1>
+{% if error %}
+<p role="alert">{{ error }}</p>
+{% endif %}
+<form method="post" action="{{ url_for('login', next=request.args.get('next')) if request.args.get('next') else url_for('login') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label>
+    Username
+    <input type="text" name="username" autocomplete="username" required>
+  </label>
+  <label>
+    Password
+    <input type="password" name="password" autocomplete="current-password" required>
+  </label>
+  <button type="submit">Log in</button>
+</form>
+{% if needs_setup %}
+<p><a href="{{ url_for('setup') }}">Create the first admin account</a></p>
+{% endif %}
+{% endblock %}
