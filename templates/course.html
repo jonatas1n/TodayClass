@@ -37,7 +37,7 @@
 {% else %}
 <ul class="lesson-list">
   {% for lesson in course.lessons %}
-  <li>
+  <li class="lesson-list__item">
     <a class="lesson-row{% if lesson.is_completed %} lesson-row--completed{% endif %}" href="{{ url_for('view_lesson', course_id=course.id, lesson_id=lesson.id) }}">
       <span class="lesson-row__main">
         <span class="lesson-row__marker" aria-hidden="true"></span>
@@ -54,6 +54,9 @@
       <span class="status-badge status-badge--pending">Pendente</span>
       {% endif %}
     </a>
+    {% if current_user.role == 'admin' %}
+    <a class="lesson-list__edit" href="{{ url_for('edit_lesson', course_id=course.id, lesson_id=lesson.id) }}">Editar</a>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>

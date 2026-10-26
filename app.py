@@ -400,6 +400,26 @@ def posted_link_rows():
     return rows[:LINK_ROW_COUNT]
 
 
+def blank_link_rows():
+    return [('', '') for _ in range(LINK_ROW_COUNT)]
+
+
+def stored_link_rows(lesson):
+    rows = [(link.title, link.url) for link in lesson.links]
+    while len(rows) < LINK_ROW_COUNT:
+        rows.append(('', ''))
+    return rows[:LINK_ROW_COUNT]
+
+
+def lesson_fields_from_request():
+    return (
+        request.form.get('day', ''),
+        request.form.get('title', '').strip(),
+        request.form.get('content', ''),
+        posted_link_rows(),
+    )
+
+
 def create_course(name):
     error = required_text_error('O nome', name, MAXIMUM_COURSE_NAME_LENGTH)
     if error:
@@ -424,6 +444,27 @@ def create_lesson(course, raw_day, title, content, link_rows):
         db.session.add(Link(title=link_title, url=url, lesson=lesson))
     db.session.commit()
     return lesson, None
+
+
+def replace_lesson_links(lesson, pairs):
+    lesson.links.clear()
+    for link_title, url in pairs:
+        lesson.links.append(Link(title=link_title, url=url))
+
+
+def update_lesson(lesson, raw_day, title, content, link_rows):
+    day_number = parse_day_number(raw_day)
+    pairs = completed_link_pairs(link_rows)
+    error = lesson_form_error(day_number, title, content, pairs)
+    if error:
+        return error
+
+    lesson.day = day_number
+    lesson.title = title
+    lesson.content = content
+    replace_lesson_links(lesson, pairs)
+    db.session.commit()
+    return None
 
 
 def resolve_post_login_url(user):
@@ -532,25 +573,55 @@ def new_lesson(course_id):
     day_value = ''
     title = ''
     content = ''
-    link_rows = [('', '') for _ in range(LINK_ROW_COUNT)]
+    link_rows = blank_link_rows()
     if request.method == 'POST':
         validate_csrf()
-        day_value = request.form.get('day', '')
-        title = request.form.get('title', '').strip()
-        content = request.form.get('content', '')
-        link_rows = posted_link_rows()
+        day_value, title, content, link_rows = lesson_fields_from_request()
         lesson, error = create_lesson(course, day_value, title, content, link_rows)
         if error is None:
             return redirect(lesson_url(lesson))
 
     return render_template(
-        'new_lesson.html',
+        'lesson_form.html',
         course=course,
         error=error,
         day_value=day_value,
         title=title,
         content=content,
         link_rows=link_rows,
+        page_title='Nova aula',
+        submit_label='Criar aula',
+        cancel_url=url_for('view_course', course_id=course.id),
+    )
+
+
+@app.route('/courses/<int:course_id>/lessons/<int:lesson_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_lesson(course_id, lesson_id):
+    lesson = find_lesson_or_404(course_id, lesson_id)
+    error = None
+    day_value = str(lesson.day)
+    title = lesson.title
+    content = lesson.content
+    link_rows = stored_link_rows(lesson)
+    if request.method == 'POST':
+        validate_csrf()
+        day_value, title, content, link_rows = lesson_fields_from_request()
+        error = update_lesson(lesson, day_value, title, content, link_rows)
+        if error is None:
+            return redirect(lesson_url(lesson))
+
+    return render_template(
+        'lesson_form.html',
+        course=lesson.course,
+        error=error,
+        day_value=day_value,
+        title=title,
+        content=content,
+        link_rows=link_rows,
+        page_title='Editar aula',
+        submit_label='Salvar',
+        cancel_url=lesson_url(lesson),
     )
 
 

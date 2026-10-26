@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Nova aula · TodayClass{% endblock %}
+{% block title %}{{ page_title }} · TodayClass{% endblock %}
 {% block content %}
 <div class="context-bar">
   <a class="back-link" href="{{ url_for('view_course', course_id=course.id) }}">{{ course.name }}</a>
@@ -7,7 +7,7 @@
 <div class="page-header">
   <div>
     <p class="page-header__eyebrow">{{ course.name }}</p>
-    <h1 class="page-header__title">Nova aula</h1>
+    <h1 class="page-header__title">{{ page_title }}</h1>
   </div>
 </div>
 {% if error %}
@@ -44,8 +44,8 @@
     {% endfor %}
   </div>
   <div class="form-actions">
-    <button type="submit">Criar aula</button>
-    <a class="button button--ghost" href="{{ url_for('view_course', course_id=course.id) }}">Cancelar</a>
+    <button type="submit">{{ submit_label }}</button>
+    <a class="button button--ghost" href="{{ cancel_url }}">Cancelar</a>
   </div>
 </form>
 {% endblock %}

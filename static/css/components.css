@@ -512,11 +512,31 @@
   border-top: 1px solid var(--color-surface-container-high);
 }
 
+.lesson-list__item {
+  display: flex;
+  align-items: center;
+}
+
+.lesson-list__edit {
+  flex-shrink: 0;
+  margin-right: var(--space-md);
+  font: var(--font-label-text);
+  color: var(--color-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lesson-list__edit:hover {
+  text-decoration: underline;
+}
+
 .lesson-row {
   display: flex;
+  flex: 1;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
+  min-width: 0;
   padding: var(--space-md);
   color: inherit;
   transition: background-color var(--transition-fast);
