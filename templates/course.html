@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Day {{ course.day }}{% endblock %}
 {% block content %}
+<p><a href="{{ url_for('course_list') }}">All courses</a></p>
 <h1>Day {{ course.day }}</h1>
 <article class="course-content">
   {{ course.content|safe }}

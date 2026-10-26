@@ -35,6 +35,9 @@ ADMIN_ROLE = 'admin'
 ROLES = (STUDENT_ROLE, ADMIN_ROLE)
 MINIMUM_PASSWORD_LENGTH = 8
 MAXIMUM_USERNAME_LENGTH = 80
+MAXIMUM_LINK_TITLE_LENGTH = 100
+MAXIMUM_LINK_URL_LENGTH = 255
+LINK_ROW_COUNT = 4
 
 
 class Course(db.Model):
@@ -202,22 +205,83 @@ def safe_next_url(target):
     return target
 
 
-def next_course_for_student():
-    incomplete_course = (
-        Course.query.filter_by(is_completed=False).order_by(Course.day).first()
-    )
-    if incomplete_course is not None:
-        return incomplete_course
-    return Course.query.order_by(Course.day.desc()).first()
-
-
 def destination_for(user):
     if user.role == ADMIN_ROLE:
         return url_for('admin_dashboard')
-    course = next_course_for_student()
-    if course is None:
-        return url_for('success')
-    return url_for('view_course', day_id=course.day)
+    return url_for('course_list')
+
+
+def parse_day_number(raw_value):
+    stripped_value = raw_value.strip()
+    if not stripped_value.isdigit():
+        return None
+    day_number = int(stripped_value)
+    if day_number < 1:
+        return None
+    return day_number
+
+
+def completed_link_pairs(link_rows):
+    pairs = []
+    for title, url in link_rows:
+        stripped_title = title.strip()
+        stripped_url = url.strip()
+        if not stripped_title and not stripped_url:
+            continue
+        pairs.append((stripped_title, stripped_url))
+    return pairs
+
+
+def link_rows_error(pairs):
+    for title, url in pairs:
+        if not title or not url:
+            return 'Each link needs a title and a URL.'
+        if len(title) > MAXIMUM_LINK_TITLE_LENGTH:
+            return 'A link title is too long.'
+        if len(url) > MAXIMUM_LINK_URL_LENGTH:
+            return 'A link URL is too long.'
+        if not url.startswith(('http://', 'https://')):
+            return 'A link URL must start with http:// or https://.'
+    return None
+
+
+def course_form_error(day_number, content, pairs):
+    if day_number is None:
+        return 'Day must be a positive whole number.'
+    if not content or not content.strip():
+        return 'Content is required.'
+    if Course.query.filter_by(day=day_number).first() is not None:
+        return 'That day already exists.'
+    return link_rows_error(pairs)
+
+
+def posted_link_rows():
+    titles = request.form.getlist('link_title')
+    urls = request.form.getlist('link_url')
+    rows = [(title, url) for title, url in zip(titles, urls)]
+    while len(rows) < LINK_ROW_COUNT:
+        rows.append(('', ''))
+    return rows[:LINK_ROW_COUNT]
+
+
+def create_course(raw_day, content, link_rows):
+    day_number = parse_day_number(raw_day)
+    pairs = completed_link_pairs(link_rows)
+    error = course_form_error(day_number, content, pairs)
+    if error:
+        return error
+
+    course = Course(day=day_number, content=content)
+    db.session.add(course)
+    for title, url in pairs:
+        db.session.add(Link(title=title, url=url, course=course))
+    try:
+        db.session.commit()
+    except IntegrityError as error:
+        db.session.rollback()
+        app.logger.exception('Could not create course: %s', error)
+        return 'That day already exists.'
+    return None
 
 
 def resolve_post_login_url(user):
@@ -267,6 +331,45 @@ def apply_admin_action():
     if action == 'reset_password':
         return reset_password_from_form()
     abort(400)
+
+
+@app.route('/')
+def home():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    return redirect(destination_for(current_user))
+
+
+@app.route('/courses')
+@login_required
+def course_list():
+    courses = Course.query.order_by(Course.day).all()
+    return render_template('courses.html', courses=courses)
+
+
+@app.route('/courses/new', methods=['GET', 'POST'])
+@admin_required
+def new_course():
+    error = None
+    day_value = ''
+    content = ''
+    link_rows = [('', '') for _ in range(LINK_ROW_COUNT)]
+    if request.method == 'POST':
+        validate_csrf()
+        day_value = request.form.get('day', '')
+        content = request.form.get('content', '')
+        link_rows = posted_link_rows()
+        error = create_course(day_value, content, link_rows)
+        if error is None:
+            return redirect(url_for('view_course', day_id=int(day_value.strip())))
+
+    return render_template(
+        'new_course.html',
+        error=error,
+        day_value=day_value,
+        content=content,
+        link_rows=link_rows,
+    )
 
 
 @app.route('/login', methods=['GET', 'POST'])

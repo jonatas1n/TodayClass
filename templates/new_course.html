@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}New course{% endblock %}
+{% block content %}
+<h1>New course</h1>
+{% if error %}
+<p role="alert">{{ error }}</p>
+{% endif %}
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label>
+    Day
+    <input type="number" name="day" min="1" step="1" required value="{{ day_value }}">
+  </label>
+  <label>
+    Content
+    <textarea class="course-editor" name="content" required>{{ content }}</textarea>
+  </label>
+  <h2>Links</h2>
+  <p>Optional. Leave a row blank to skip it.</p>
+  {% for title, url in link_rows %}
+  <div class="compact-row">
+    <label>
+      Title
+      <input type="text" name="link_title" maxlength="100" value="{{ title }}">
+    </label>
+    <label>
+      URL
+      <input type="url" name="link_url" maxlength="255" value="{{ url }}">
+    </label>
+  </div>
+  {% endfor %}
+  <button type="submit">Create course</button>
+</form>
+{% endblock %}

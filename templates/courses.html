@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Courses{% endblock %}
+{% block content %}
+<h1>Courses</h1>
+{% if not courses %}
+<p>No courses yet.</p>
+{% else %}
+<ul class="course-list">
+  {% for course in courses %}
+  <li>
+    <a href="{{ url_for('view_course', day_id=course.day) }}">Day {{ course.day }}</a>
+    <span>{{ 'Completed' if course.is_completed else 'Pending' }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
