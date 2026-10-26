@@ -16,7 +16,7 @@
     <form class="auth-card__form form-stack" method="post" action="{{ url_for('login', next=request.args.get('next')) if request.args.get('next') else url_for('login') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label>
-        Usuário
+        E-mail
         <input type="text" name="username" autocomplete="username" required>
       </label>
       <label>
