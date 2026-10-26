@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aula · TodayClass</title>
+  <link rel="icon" href="/brand/favicon.png" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/brand/manifest.json">
+  <meta name="theme-color" content="#4338c9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <script src="/js/lucide.min.js" defer></script>
+  <script type="module" src="/js/pages/lesson.js"></script>
+</head>
+<body data-section="courses">
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__start">
+        <a class="site-header__brand" id="site-brand" href="/">
+          <img class="site-header__logo" src="/brand/logo.png" alt="" width="32" height="32">
+          <span class="site-header__wordmark">TodayClass</span>
+        </a>
+        <nav class="site-nav" id="site-nav" hidden></nav>
+      </div>
+      <div class="site-header__actions" id="site-actions" hidden></div>
+    </div>
+  </header>
+  <main class="container">
+    <div class="context-bar">
+      <a class="back-link" id="course-link" href="/courses.html"><i data-lucide="arrow-left" aria-hidden="true"></i><span id="course-link-label">Cursos</span></a>
+      <a class="button button--small" id="edit-lesson-button" href="/lesson-form.html" hidden><i data-lucide="pencil" aria-hidden="true"></i>Editar</a>
+    </div>
+    <div id="page-error" hidden></div>
+    <article class="lesson-article" id="lesson-article" hidden>
+      <header class="lesson-article__header">
+        <p class="lesson-article__eyebrow" id="lesson-course-name"></p>
+        <h1 class="lesson-article__title" id="lesson-label"></h1>
+      </header>
+      <div class="lesson-content" id="lesson-content"></div>
+      <section class="resource-links" id="lesson-links" hidden>
+        <h2 class="resource-links__title"><i data-lucide="link" aria-hidden="true"></i>Links</h2>
+        <ul class="resource-links__list" id="lesson-link-list"></ul>
+      </section>
+      <section class="lesson-status">
+        <div>
+          <span class="lesson-status__eyebrow">Situação</span>
+        </div>
+        <div id="lesson-status"></div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

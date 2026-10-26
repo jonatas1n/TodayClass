@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Progresso · TodayClass</title>
+  <link rel="icon" href="/brand/favicon.png" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/brand/manifest.json">
+  <meta name="theme-color" content="#4338c9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <script src="/js/lucide.min.js" defer></script>
+  <script type="module" src="/js/pages/admin.js"></script>
+</head>
+<body data-section="progress">
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__start">
+        <a class="site-header__brand" id="site-brand" href="/">
+          <img class="site-header__logo" src="/brand/logo.png" alt="" width="32" height="32">
+          <span class="site-header__wordmark">TodayClass</span>
+        </a>
+        <nav class="site-nav" id="site-nav" hidden></nav>
+      </div>
+      <div class="site-header__actions" id="site-actions" hidden></div>
+    </div>
+  </header>
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">Progresso</h1>
+      </div>
+    </div>
+    <div id="page-error" hidden></div>
+    <div class="table-panel">
+      <table>
+        <thead>
+          <tr>
+            <th>Curso</th>
+            <th>Aula</th>
+            <th>Situação</th>
+            <th>Concluída em</th>
+            <th class="data-table__numeric">Links</th>
+          </tr>
+        </thead>
+        <tbody id="progress-rows"></tbody>
+      </table>
+    </div>
+
+    <section class="section">
+      <h2 class="section__title">Usuários</h2>
+      <div class="user-list" id="user-list"></div>
+    </section>
+
+    <section class="section">
+      <h2 class="section__title">Novo login</h2>
+      <div id="new-user-error" hidden></div>
+      <form class="form-stack" id="new-user-form">
+        <label>
+          Usuário
+          <input type="text" name="username" autocomplete="username" maxlength="80" required>
+        </label>
+        <label>
+          Senha
+          <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <label>
+          Papel
+          <select class="select--compact" name="role" required>
+            <option value="student" selected>aluno</option>
+            <option value="admin">administrador</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button type="submit"><i data-lucide="user-plus" aria-hidden="true"></i>Criar login</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuração · TodayClass</title>
+  <link rel="icon" href="/brand/favicon.png" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/brand/manifest.json">
+  <meta name="theme-color" content="#4338c9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <script src="/js/lucide.min.js" defer></script>
+  <script type="module" src="/js/pages/setup.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__start">
+        <a class="site-header__brand" id="site-brand" href="/login.html">
+          <img class="site-header__logo" src="/brand/logo.png" alt="" width="32" height="32">
+          <span class="site-header__wordmark">TodayClass</span>
+        </a>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <div class="auth-layout">
+      <div class="auth-card">
+        <div class="auth-card__brand">
+          <img class="brand-mark" src="/brand/logo.png" alt="" width="48" height="48">
+          <span class="auth-card__brand-name">TodayClass</span>
+        </div>
+        <div class="auth-card__header">
+          <h1 class="auth-card__title">Criar a conta de administrador</h1>
+          <p class="auth-card__subtitle">Primeiro acesso: defina o login de administrador.</p>
+        </div>
+        <div id="page-error" hidden></div>
+        <form class="auth-card__form form-stack" id="setup-form">
+          <label>
+            Usuário
+            <input type="text" name="username" autocomplete="username" maxlength="80" required>
+          </label>
+          <label>
+            Senha
+            <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+          </label>
+          <button type="submit" class="button--block"><i data-lucide="user-plus" aria-hidden="true"></i>Criar administrador</button>
+        </form>
+        <div class="auth-card__footer">
+          <a href="/login.html">Entrar</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

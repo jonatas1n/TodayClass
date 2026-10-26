@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cursos · TodayClass</title>
+  <link rel="icon" href="/brand/favicon.png" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/brand/manifest.json">
+  <meta name="theme-color" content="#4338c9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <script src="/js/lucide.min.js" defer></script>
+  <script type="module" src="/js/pages/courses.js"></script>
+</head>
+<body data-section="courses">
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__start">
+        <a class="site-header__brand" id="site-brand" href="/">
+          <img class="site-header__logo" src="/brand/logo.png" alt="" width="32" height="32">
+          <span class="site-header__wordmark">TodayClass</span>
+        </a>
+        <nav class="site-nav" id="site-nav" hidden></nav>
+      </div>
+      <div class="site-header__actions" id="site-actions" hidden></div>
+    </div>
+  </header>
+  <main class="container">
+    <div id="page-error" hidden></div>
+    <div class="page-header">
+      <div>
+        <p class="page-header__eyebrow">TodayClass</p>
+        <h1 class="page-header__title">Cursos</h1>
+        <p class="page-header__lead">Escolha um curso para ver as aulas.</p>
+      </div>
+      <div class="page-header__actions">
+        <div class="stat-group">
+          <div class="stat">
+            <span class="stat__label">Cursos</span>
+            <span class="stat__value" id="course-count">0</span>
+          </div>
+          <span class="stat-group__divider" aria-hidden="true"></span>
+          <div class="stat">
+            <span class="stat__label">Aulas</span>
+            <span class="stat__value stat__value--accent" id="lesson-count">0</span>
+          </div>
+        </div>
+        <a class="button" id="new-course-button" href="/new-course.html" hidden><i data-lucide="plus" aria-hidden="true"></i>Criar curso</a>
+      </div>
+    </div>
+    <div class="list-panel" id="course-panel"></div>
+  </main>
+</body>
+</html>

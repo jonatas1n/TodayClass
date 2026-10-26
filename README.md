@@ -1,56 +1,115 @@
 # TodayClass
 
-Um curso por dia, no celular. Você escreve a aula, seu pai lê e marca como feita. O progresso fica num SQLite, e o site cabe no plano gratuito do [PythonAnywhere](https://www.pythonanywhere.com/).
+Um curso por dia, no celular. Você escreve a aula, seu pai lê e marca como feita.
 
-## O que tem aqui
+O sistema tem três partes, cada uma num serviço com plano gratuito:
 
-Tudo vive em [`app.py`](app.py). As páginas ficam em `templates/` e usam [Pico.css](https://picocss.com/), então o layout já nasce legível no telefone.
-
-| Rota | Quem entra | O que faz |
+| Parte | Pasta | Onde roda |
 | --- | --- | --- |
-| `/setup` | ninguém, só na primeira vez | cria a conta de admin |
-| `/login` | os dois | entra no site |
-| `/day/<dia>` | aluno ou admin | lê a aula e os links |
-| `/success` | aluno ou admin | confirma que o dia foi concluído |
-| `/secret-admin-dashboard` | só admin | vê o progresso e cria logins |
+| Frontend (HTML, CSS e JS puros) | [`frontend/`](frontend) | [Cloudflare Pages](https://pages.cloudflare.com/) |
+| API Flask em JSON | [`backend/`](backend) | [Vercel](https://vercel.com/), como função serverless |
+| Banco SQLite | | [Turso](https://turso.tech/) |
 
-O aluno cai no primeiro dia ainda não concluído. O admin cai no painel. "Mark as Done" só aparece para o aluno, para um preview seu não marcar o dia dele sem querer.
+O navegador só conversa com o domínio do Pages. Uma Pages Function em [`frontend/functions/api/[[path]].js`](frontend/functions/api/[[path]].js) repassa todo `/api/*` para a Vercel. Assim o cookie de sessão continua sendo do mesmo site, e não é preciso configurar CORS.
 
-O conteúdo da aula é HTML. Na página ele é renderizado de propósito, então escreva o texto você mesmo e não cole HTML de outra pessoa.
+## Estrutura
+
+```
+backend/
+  api/index.py          entrada da função na Vercel
+  todayclass/           app Flask (create_app, modelos, validação, rotas)
+  scripts/init_db.py    cria as tabelas e a aula de exemplo
+  tests/                testes com pytest
+  dev.py                servidor local que também serve o frontend
+frontend/
+  public/               páginas, CSS, JS e marca
+  functions/api/        proxy de /api para a Vercel
+  tests/                testes do proxy com node --test
+```
+
+## Rotas da API
+
+| Rota | Quem acessa | O que faz |
+| --- | --- | --- |
+| `GET /api/session` | todos | usuário atual, `needs_setup` e o token CSRF |
+| `POST /api/setup` | ninguém, só na primeira vez | cria a conta de admin |
+| `POST /api/login`, `POST /api/logout` | todos | entra e sai |
+| `GET /api/courses`, `GET /api/courses/<id>` | aluno ou admin | lista os cursos e as aulas de um curso |
+| `POST /api/courses` | admin | cria um curso |
+| `GET /api/courses/<id>/lessons/<id>` | aluno ou admin | lê uma aula |
+| `POST`/`PUT` em `/api/courses/<id>/lessons[/<id>]` | admin | cria ou edita uma aula |
+| `POST /api/courses/<id>/lessons/<id>/complete` | aluno | marca a aula como feita |
+| `/api/admin/progress`, `/api/admin/users` | admin | progresso, logins e troca de senha |
+
+Todo `POST`, `PUT`, `PATCH` e `DELETE` precisa de corpo JSON e do cabeçalho `X-CSRF-Token` com o token de `/api/session`. O `frontend/public/js/api.js` cuida disso.
+
+O conteúdo da aula é HTML e é renderizado de propósito. Escreva o texto você mesmo e não cole HTML de outra pessoa.
 
 ## Rodar na sua máquina
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
+pip install -r backend/requirements-dev.txt
+cd backend
+python dev.py
 ```
 
-Abra [http://127.0.0.1:5000/setup](http://127.0.0.1:5000/setup), crie o admin e, no painel, crie o login do seu pai. A senha precisa ter pelo menos 8 caracteres.
+Abra [http://localhost:5001/setup.html](http://localhost:5001/setup.html), crie o admin e, no painel de progresso, crie o login do seu pai. A senha precisa ter pelo menos 8 caracteres. A porta é 5001 porque, no macOS, a 5000 costuma estar ocupada pelo AirPlay.
 
-O banco `courses.db` aparece ao lado do `app.py`. Se ainda não existir nenhuma aula, o app cria o dia 1 só para você ver o formato.
+Sem `TURSO_DATABASE_URL`, o backend usa o arquivo `backend/courses.db`. Se ainda não houver nenhuma aula, ele cria o Dia 1 para você ver o formato.
 
-## Publicar no PythonAnywhere
+Testes:
 
-1. Crie um web app Flask apontando para esta pasta e para o virtualenv.
-2. No arquivo WSGI, defina a chave **antes** de importar o app:
-
-```python
-import os
-os.environ["SECRET_KEY"] = "um-valor-longo-e-aleatorio"
-from app import app as application
+```bash
+cd backend && pytest
+cd frontend && npm test
 ```
 
-3. No console, com o virtualenv ativo: `pip install -r requirements.txt`.
-4. Recarregue o site e visite `/setup`.
+## Banco no Turso
 
-Sem `SECRET_KEY`, o processo para na hora. Localmente o `python app.py` usa uma chave só de desenvolvimento. Não leve essa chave para o ar.
+Com a [CLI do Turso](https://docs.turso.tech/cli/introduction) instalada e logada:
 
-O cookie de sessão no PythonAnywhere vai com `Secure`, `HttpOnly` e `SameSite=Lax`. O banco continua no diretório do projeto, que é gravável no plano gratuito.
+```bash
+# Para levar um courses.db que já existe (por exemplo, o do PythonAnywhere):
+turso db create todayclass --from-file courses.db
+
+# Ou, para começar do zero:
+turso db create todayclass
+
+turso db show todayclass --url    # libsql://todayclass-<usuario>.turso.io
+turso db tokens create todayclass
+```
+
+Se o banco foi criado do zero, crie as tabelas e a aula de exemplo uma vez:
+
+```bash
+cd backend
+TURSO_DATABASE_URL=libsql://... TURSO_AUTH_TOKEN=... SECRET_KEY=qualquer python scripts/init_db.py
+```
+
+## Publicar o backend na Vercel
+
+1. Importe o repositório na Vercel e defina **Root Directory** como `backend`.
+2. Em Environment Variables, defina:
+   - `SECRET_KEY`: um valor longo e aleatório (`python -c "import secrets; print(secrets.token_hex(32))"`).
+   - `TURSO_DATABASE_URL`: a URL `libsql://...` do passo anterior.
+   - `TURSO_AUTH_TOKEN`: o token criado.
+3. Publique e anote o domínio, por exemplo `https://todayclass-api.vercel.app`.
+
+O [`backend/vercel.json`](backend/vercel.json) manda toda requisição para `api/index.py`. Sem `SECRET_KEY`, a função falha logo ao iniciar, de propósito.
+
+## Publicar o frontend no Cloudflare Pages
+
+1. Crie um projeto no Pages ligado ao repositório.
+2. Defina **Root directory** como `frontend`, deixe o build command vazio e use `public` como **Build output directory**.
+3. Em Environment Variables, defina `API_ORIGIN` com o domínio da Vercel (`https://todayclass-api.vercel.app`).
+4. Publique e visite `/setup.html` no domínio do Pages.
+
+Para testar o Pages localmente com o proxy, rode `npx wrangler pages dev` dentro de `frontend/`, com `API_ORIGIN` definido em `frontend/.dev.vars`.
 
 ## Contas
 
-Há dois papéis, `admin` e `student`, na tabela `User`. A senha é gravada com hash. Não existe cadastro público: depois do primeiro admin, `/setup` some. Se alguém esquecer a senha, o admin define outra no painel.
+Há dois papéis, `admin` e `student`, na tabela `User`. A senha é gravada com hash. Não existe cadastro público: depois do primeiro admin, `/api/setup` responde 404. Se alguém esquecer a senha, o admin define outra no painel.
 
-O progresso é do curso, não de cada pessoa. Um aluno, um dia, uma conclusão.
+O cookie de sessão é `Secure`, `HttpOnly` e `SameSite=Lax`. O progresso é do curso, não de cada pessoa: um aluno, um dia, uma conclusão.

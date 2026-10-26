@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Curso · TodayClass</title>
+  <link rel="icon" href="/brand/favicon.png" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/brand/manifest.json">
+  <meta name="theme-color" content="#4338c9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <script src="/js/lucide.min.js" defer></script>
+  <script type="module" src="/js/pages/course.js"></script>
+</head>
+<body data-section="courses">
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__start">
+        <a class="site-header__brand" id="site-brand" href="/">
+          <img class="site-header__logo" src="/brand/logo.png" alt="" width="32" height="32">
+          <span class="site-header__wordmark">TodayClass</span>
+        </a>
+        <nav class="site-nav" id="site-nav" hidden></nav>
+      </div>
+      <div class="site-header__actions" id="site-actions" hidden></div>
+    </div>
+  </header>
+  <main class="container">
+    <div class="context-bar">
+      <a class="back-link" href="/courses.html"><i data-lucide="arrow-left" aria-hidden="true"></i>Todos os cursos</a>
+    </div>
+    <div id="page-error" hidden></div>
+    <div id="course-content" hidden>
+      <div class="page-header">
+        <div>
+          <p class="page-header__eyebrow">Curso</p>
+          <h1 class="page-header__title" id="course-name"></h1>
+        </div>
+        <div class="page-header__actions" id="course-actions" hidden>
+          <a class="button button--small" id="new-lesson-button" href="/lesson-form.html"><i data-lucide="plus" aria-hidden="true"></i>Nova aula</a>
+        </div>
+      </div>
+      <div class="progress-panel">
+        <div class="progress-panel__head">
+          <span class="progress-panel__label">Progresso</span>
+          <span id="progress-summary"></span>
+        </div>
+        <progress class="progress-bar" id="progress-bar" value="0" max="1"></progress>
+      </div>
+      <div class="list-toolbar">
+        <h2 class="list-toolbar__title">Aulas</h2>
+        <span class="list-toolbar__meta" id="lesson-total"></span>
+      </div>
+      <div id="lesson-panel"></div>
+    </div>
+  </main>
+</body>
+</html>
