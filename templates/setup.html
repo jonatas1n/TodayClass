@@ -4,6 +4,7 @@
 <div class="auth-layout">
   <div class="auth-card">
     <div class="auth-card__brand">
+      <img class="brand-mark" src="{{ url_for('static', filename='brand/logo.png') }}" alt="" width="48" height="48">
       <span class="auth-card__brand-name">TodayClass</span>
     </div>
     <div class="auth-card__header">
@@ -11,7 +12,7 @@
       <p class="auth-card__subtitle">Primeiro acesso: defina o login de administrador.</p>
     </div>
     {% if error %}
-    <p class="alert alert--error" role="alert">{{ error }}</p>
+    <p class="alert alert--error" role="alert"><i data-lucide="circle-alert" aria-hidden="true"></i><span>{{ error }}</span></p>
     {% endif %}
     <form class="auth-card__form form-stack" method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -23,7 +24,7 @@
         Senha
         <input type="password" name="password" autocomplete="new-password" minlength="8" required>
       </label>
-      <button type="submit" class="button--block">Criar administrador</button>
+      <button type="submit" class="button--block"><i data-lucide="user-plus" aria-hidden="true"></i>Criar administrador</button>
     </form>
     <div class="auth-card__footer">
       <a href="{{ url_for('login') }}">Entrar</a>

@@ -17,17 +17,18 @@
       <span class="stat-group__divider" aria-hidden="true"></span>
       <div class="stat">
         <span class="stat__label">Aulas</span>
-        <span class="stat__value stat__value--primary">{{ total_lessons }}</span>
+        <span class="stat__value stat__value--accent">{{ total_lessons }}</span>
       </div>
     </div>
     {% if current_user.role == 'admin' %}
-    <a class="button" href="{{ url_for('new_course') }}">Criar curso</a>
+    <a class="button" href="{{ url_for('new_course') }}"><i data-lucide="plus" aria-hidden="true"></i>Criar curso</a>
     {% endif %}
   </div>
 </div>
 <div class="list-panel">
   {% if not course_rows %}
   <div class="empty-state">
+    <i data-lucide="book-open" class="empty-state__icon" aria-hidden="true"></i>
     <p class="empty-state__title">Nenhum curso ainda.</p>
   </div>
   {% else %}
@@ -43,7 +44,7 @@
         <span class="course-row__body">
           <span class="course-row__title">{{ course.name }}</span>
         </span>
-        <span class="course-row__meta">{{ lesson_count }} {{ 'aula' if lesson_count == 1 else 'aulas' }}</span>
+        <span class="course-row__meta">{{ lesson_count }} {{ 'aula' if lesson_count == 1 else 'aulas' }}<i data-lucide="chevron-right" aria-hidden="true"></i></span>
       </a>
     </li>
     {% endfor %}

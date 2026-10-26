@@ -4,7 +4,7 @@
 {% set lesson_count = course.lessons|length %}
 {% set completed_count = course.lessons|selectattr('is_completed')|list|length %}
 <div class="context-bar">
-  <a class="back-link" href="{{ url_for('course_list') }}">Todos os cursos</a>
+  <a class="back-link" href="{{ url_for('course_list') }}"><i data-lucide="arrow-left" aria-hidden="true"></i>Todos os cursos</a>
 </div>
 <div class="page-header">
   <div>
@@ -13,7 +13,7 @@
   </div>
   {% if current_user.role == 'admin' %}
   <div class="page-header__actions">
-    <a class="button button--small" href="{{ url_for('new_lesson', course_id=course.id) }}">Nova aula</a>
+    <a class="button button--small" href="{{ url_for('new_lesson', course_id=course.id) }}"><i data-lucide="plus" aria-hidden="true"></i>Nova aula</a>
   </div>
   {% endif %}
 </div>
@@ -31,6 +31,7 @@
 {% if not course.lessons %}
 <div class="list-panel">
   <div class="empty-state">
+    <i data-lucide="book-open" class="empty-state__icon" aria-hidden="true"></i>
     <p class="empty-state__title">Nenhuma aula ainda.</p>
   </div>
 </div>
@@ -40,7 +41,7 @@
   <li class="lesson-list__item">
     <a class="lesson-row{% if lesson.is_completed %} lesson-row--completed{% endif %}" href="{{ url_for('view_lesson', course_id=course.id, lesson_id=lesson.id) }}">
       <span class="lesson-row__main">
-        <span class="lesson-row__marker" aria-hidden="true"></span>
+        <span class="lesson-row__marker" aria-hidden="true"><i data-lucide="{{ 'circle-check' if lesson.is_completed else 'circle' }}"></i></span>
         <span class="lesson-row__body">
           <span class="lesson-row__title">{{ lesson.label }}</span>
           {% if lesson.completed_at %}
@@ -49,13 +50,13 @@
         </span>
       </span>
       {% if lesson.is_completed %}
-      <span class="status-badge status-badge--completed">Concluída</span>
+      <span class="status-badge status-badge--completed"><i data-lucide="circle-check" aria-hidden="true"></i>Concluída</span>
       {% else %}
-      <span class="status-badge status-badge--pending">Pendente</span>
+      <span class="status-badge status-badge--pending"><i data-lucide="circle" aria-hidden="true"></i>Pendente</span>
       {% endif %}
     </a>
     {% if current_user.role == 'admin' %}
-    <a class="lesson-list__edit" href="{{ url_for('edit_lesson', course_id=course.id, lesson_id=lesson.id) }}">Editar</a>
+    <a class="lesson-list__edit" href="{{ url_for('edit_lesson', course_id=course.id, lesson_id=lesson.id) }}"><i data-lucide="pencil" aria-hidden="true"></i>Editar</a>
     {% endif %}
   </li>
   {% endfor %}

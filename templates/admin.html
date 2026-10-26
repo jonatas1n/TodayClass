@@ -7,7 +7,7 @@
   </div>
 </div>
 {% if error %}
-<p class="alert alert--error" role="alert">{{ error }}</p>
+<p class="alert alert--error" role="alert"><i data-lucide="circle-alert" aria-hidden="true"></i><span>{{ error }}</span></p>
 {% endif %}
 <div class="table-panel">
   <table>
@@ -27,9 +27,9 @@
         <td><a href="{{ url_for('view_lesson', course_id=lesson.course_id, lesson_id=lesson.id) }}">{{ lesson.label }}</a></td>
         <td>
           {% if lesson.is_completed %}
-          <span class="status-badge status-badge--completed">Concluída</span>
+          <span class="status-badge status-badge--completed"><i data-lucide="circle-check" aria-hidden="true"></i>Concluída</span>
           {% else %}
-          <span class="status-badge status-badge--pending">Pendente</span>
+          <span class="status-badge status-badge--pending"><i data-lucide="circle" aria-hidden="true"></i>Pendente</span>
           {% endif %}
         </td>
         <td class="data-table__mono">
@@ -71,7 +71,7 @@
           Nova senha
           <input type="password" name="password" autocomplete="new-password" minlength="8" required>
         </label>
-        <button type="submit" class="button--secondary">Definir senha</button>
+        <button type="submit" class="button--secondary"><i data-lucide="key-round" aria-hidden="true"></i>Definir senha</button>
       </form>
     </div>
     {% endfor %}
@@ -99,7 +99,7 @@
       </select>
     </label>
     <div class="form-actions">
-      <button type="submit">Criar login</button>
+      <button type="submit"><i data-lucide="user-plus" aria-hidden="true"></i>Criar login</button>
     </div>
   </form>
 </section>

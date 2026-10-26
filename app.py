@@ -591,6 +591,7 @@ def new_lesson(course_id):
         link_rows=link_rows,
         page_title='Nova aula',
         submit_label='Criar aula',
+        submit_icon='plus',
         cancel_url=url_for('view_course', course_id=course.id),
     )
 
@@ -621,6 +622,7 @@ def edit_lesson(course_id, lesson_id):
         link_rows=link_rows,
         page_title='Editar aula',
         submit_label='Salvar',
+        submit_icon='check',
         cancel_url=lesson_url(lesson),
     )
 

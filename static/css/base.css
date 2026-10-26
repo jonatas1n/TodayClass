@@ -37,6 +37,13 @@ iframe {
   max-width: 100%;
 }
 
+.lucide {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
 img,
 video {
   height: auto;
@@ -97,6 +104,9 @@ main.container > :last-child {
 }
 
 .site-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
   font: var(--font-label-text);
   font-weight: 700;
   color: var(--color-on-surface);
@@ -117,6 +127,9 @@ main.container > :last-child {
 }
 
 .site-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   font: var(--font-label-text);
   color: var(--color-on-surface-variant);
   text-decoration: none;
@@ -144,6 +157,9 @@ main.container > :last-child {
 }
 
 .site-header__logout {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   height: auto;
   padding: 0;
   border: 0;

@@ -13,7 +13,7 @@
   font: var(--font-code-inline);
   text-transform: uppercase;
   letter-spacing: var(--tracking-widest);
-  color: var(--color-primary);
+  color: var(--color-tertiary);
 }
 
 .page-header__title {
@@ -74,10 +74,15 @@
   color: var(--color-primary);
 }
 
-.back-link::before {
-  content: "\2190";
-  font-size: 1.125rem;
-  line-height: 1;
+.brand-mark {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+
+.brand-mark--header {
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 /* Metrics pill (Courses header) */
@@ -111,6 +116,10 @@
   color: var(--color-primary);
 }
 
+.stat__value--accent {
+  color: var(--color-tertiary);
+}
+
 .stat-group__divider {
   width: 1px;
   height: 2rem;
@@ -133,6 +142,10 @@
 
 .card > :last-child {
   margin-bottom: 0;
+}
+
+.card .brand-mark {
+  margin-bottom: var(--space-md);
 }
 
 .card--narrow {
@@ -173,16 +186,15 @@
 
 .auth-card__brand {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
   margin-bottom: var(--space-lg);
 }
 
 .auth-card__brand-name {
-  font: var(--font-code-block);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: -0.025em;
+  font: var(--font-headline-sm);
+  letter-spacing: -0.02em;
   color: var(--color-primary);
 }
 
@@ -257,22 +269,6 @@
 .alert--error {
   color: var(--color-on-error-container);
   background: var(--color-error-container);
-}
-
-.alert--error::before {
-  content: "!";
-  flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
-  margin-top: 0.125rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid currentColor;
-  border-radius: 50%;
-  font-size: 0.625rem;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .alert--success {
@@ -389,14 +385,12 @@
   color: var(--color-secondary);
 }
 
-.course-row__meta::after {
-  content: "\203A";
-  font: var(--font-body-md);
+.course-row__meta .lucide {
   color: var(--color-outline);
   transition: transform var(--transition-fast), color var(--transition-fast);
 }
 
-.course-row:hover .course-row__meta::after {
+.course-row:hover .course-row__meta .lucide {
   color: var(--color-primary);
   transform: translateX(0.125rem);
 }
@@ -408,6 +402,13 @@
   align-items: center;
   padding: var(--space-xl) var(--space-md);
   text-align: center;
+}
+
+.empty-state__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-bottom: var(--space-sm);
+  color: var(--color-tertiary-container);
 }
 
 .empty-state__title {
@@ -458,7 +459,7 @@
   overflow: hidden;
   appearance: none;
   background: var(--color-surface-container-highest);
-  color: var(--color-primary);
+  color: var(--color-tertiary-container);
 }
 
 .progress-bar::-webkit-progress-bar {
@@ -466,12 +467,12 @@
 }
 
 .progress-bar::-webkit-progress-value {
-  background: var(--color-primary);
+  background: var(--color-tertiary-container);
   transition: width 300ms ease;
 }
 
 .progress-bar::-moz-progress-bar {
-  background: var(--color-primary);
+  background: var(--color-tertiary-container);
 }
 
 /* Section toolbar above a list (e.g. "Lessons" + mono meta) */
@@ -518,6 +519,9 @@
 }
 
 .lesson-list__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   flex-shrink: 0;
   margin-right: var(--space-md);
   font: var(--font-label-text);
@@ -556,15 +560,13 @@
 }
 
 .lesson-row__marker {
-  width: 0.5rem;
-  height: 0.5rem;
+  display: inline-flex;
   flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--color-outline-variant);
+  color: var(--color-outline);
 }
 
 .lesson-row--completed .lesson-row__marker {
-  background: var(--color-primary);
+  color: var(--color-tertiary);
 }
 
 .lesson-row__body {
@@ -596,6 +598,7 @@
 .status-badge {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-xs);
   flex-shrink: 0;
   padding: var(--space-xs) var(--space-sm);
   font: var(--font-caption);
@@ -603,9 +606,14 @@
   white-space: nowrap;
 }
 
+.status-badge .lucide {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
 .status-badge--completed {
-  color: var(--color-on-secondary-container);
-  background: var(--color-secondary-container);
+  color: var(--color-on-tertiary-fixed-variant);
+  background: var(--color-tertiary-fixed);
 }
 
 .status-badge--pending {
@@ -642,7 +650,7 @@
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wider);
-  color: var(--color-secondary);
+  color: var(--color-tertiary);
 }
 
 .lesson-article__title {
@@ -774,8 +782,8 @@
 
 .resource-links__list {
   margin: 0;
-  padding-left: var(--space-md);
-  list-style: disc;
+  padding-left: 0;
+  list-style: none;
   color: var(--color-primary);
 }
 
@@ -788,12 +796,6 @@
   align-items: center;
   gap: var(--space-xs);
   overflow-wrap: anywhere;
-}
-
-.resource-links__link::after {
-  content: "\2197";
-  font-size: 0.875rem;
-  color: var(--color-secondary);
 }
 
 /* Completion status block (Lesson page) */
@@ -809,7 +811,7 @@
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wider);
-  color: var(--color-secondary);
+  color: var(--color-tertiary);
 }
 
 .lesson-status__title {
@@ -850,16 +852,9 @@
   padding: var(--space-sm) var(--space-md);
   font: var(--font-body-sm);
   font-family: var(--font-mono);
-  color: var(--color-on-secondary-container);
-  background: var(--color-secondary-container);
+  color: var(--color-on-tertiary-fixed-variant);
+  background: var(--color-tertiary-fixed);
   border-radius: var(--radius-sm);
-}
-
-.completion-badge::before {
-  content: "\2713";
-  font-family: var(--font-sans);
-  font-weight: 700;
-  color: var(--color-primary);
 }
 
 .completion-note {
@@ -907,6 +902,9 @@
 }
 
 .form-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   margin: 0;
   font: var(--font-headline-sm);
   letter-spacing: normal;
