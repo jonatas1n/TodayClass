@@ -1,75 +1,106 @@
 {% extends "base.html" %}
-{% block title %}Progress{% endblock %}
+{% block title %}Progresso · TodayClass{% endblock %}
 {% block content %}
-<h1>Progress</h1>
+<div class="page-header">
+  <div>
+    <h1 class="page-header__title">Progresso</h1>
+  </div>
+</div>
 {% if error %}
-<p role="alert">{{ error }}</p>
+<p class="alert alert--error" role="alert">{{ error }}</p>
 {% endif %}
-<div class="table-wrap">
+<div class="table-panel">
   <table>
     <thead>
       <tr>
-        <th>Day</th>
-        <th>Status</th>
-        <th>Completed at</th>
-        <th>Links</th>
+        <th>Curso</th>
+        <th>Aula</th>
+        <th>Situação</th>
+        <th>Concluída em</th>
+        <th class="data-table__numeric">Links</th>
       </tr>
     </thead>
     <tbody>
-      {% for course in courses %}
+      {% for lesson in lessons %}
       <tr>
-        <td><a href="{{ url_for('view_course', day_id=course.day) }}">{{ course.day }}</a></td>
-        <td>{{ 'Completed' if course.is_completed else 'Pending' }}</td>
+        <td><a href="{{ url_for('view_course', course_id=lesson.course_id) }}">{{ lesson.course.name }}</a></td>
+        <td><a href="{{ url_for('view_lesson', course_id=lesson.course_id, lesson_id=lesson.id) }}">{{ lesson.label }}</a></td>
         <td>
-          {% if course.completed_at %}
-          {{ course.completed_at.strftime('%Y-%m-%d %H:%M') }} UTC
+          {% if lesson.is_completed %}
+          <span class="status-badge status-badge--completed">Concluída</span>
+          {% else %}
+          <span class="status-badge status-badge--pending">Pendente</span>
+          {% endif %}
+        </td>
+        <td class="data-table__mono">
+          {% if lesson.completed_at %}
+          {{ lesson.completed_at.strftime('%Y-%m-%d %H:%M') }} UTC
           {% else %}
           —
           {% endif %}
         </td>
-        <td>{{ course.links|length }}</td>
+        <td class="data-table__numeric">{{ lesson.links|length }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5">Nenhuma aula ainda.</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
-<h2>Users</h2>
-{% for user in users %}
-<article class="user-row">
-  <header>{{ user.username }} — {{ user.role }}</header>
-  <form class="compact-row" method="post">
+<section class="section">
+  <h2 class="section__title">Usuários</h2>
+  <div class="user-list">
+    {% for user in users %}
+    <div class="user-row">
+      <div class="user-row__header">
+        <span class="user-row__name">{{ user.username }}</span>
+        {% if user.role == 'admin' %}
+        <span class="tag tag--primary">administrador</span>
+        {% else %}
+        <span class="tag">aluno</span>
+        {% endif %}
+      </div>
+      <form class="inline-form" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="action" value="reset_password">
+        <input type="hidden" name="user_id" value="{{ user.id }}">
+        <label>
+          Nova senha
+          <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <button type="submit" class="button--secondary">Definir senha</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section__title">Novo login</h2>
+  <form class="form-stack" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <input type="hidden" name="action" value="reset_password">
-    <input type="hidden" name="user_id" value="{{ user.id }}">
+    <input type="hidden" name="action" value="create_user">
     <label>
-      New password
+      Usuário
+      <input type="text" name="username" autocomplete="username" maxlength="80" required>
+    </label>
+    <label>
+      Senha
       <input type="password" name="password" autocomplete="new-password" minlength="8" required>
     </label>
-    <button type="submit" class="secondary">Set password</button>
+    <label>
+      Papel
+      <select class="select--compact" name="role" required>
+        <option value="student" selected>aluno</option>
+        <option value="admin">administrador</option>
+      </select>
+    </label>
+    <div class="form-actions">
+      <button type="submit">Criar login</button>
+    </div>
   </form>
-</article>
-{% endfor %}
-
-<h2>New login</h2>
-<form method="post">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-  <input type="hidden" name="action" value="create_user">
-  <label>
-    Username
-    <input type="text" name="username" autocomplete="username" maxlength="80" required>
-  </label>
-  <label>
-    Password
-    <input type="password" name="password" autocomplete="new-password" minlength="8" required>
-  </label>
-  <label>
-    Role
-    <select name="role" required>
-      <option value="student" selected>student</option>
-      <option value="admin">admin</option>
-    </select>
-  </label>
-  <button type="submit">Create login</button>
-</form>
+</section>
 {% endblock %}

@@ -1,17 +1,53 @@
 {% extends "base.html" %}
-{% block title %}Courses{% endblock %}
+{% block title %}Cursos · TodayClass{% endblock %}
 {% block content %}
-<h1>Courses</h1>
-{% if not courses %}
-<p>No courses yet.</p>
-{% else %}
-<ul class="course-list">
-  {% for course in courses %}
-  <li>
-    <a href="{{ url_for('view_course', day_id=course.day) }}">Day {{ course.day }}</a>
-    <span>{{ 'Completed' if course.is_completed else 'Pending' }}</span>
-  </li>
-  {% endfor %}
-</ul>
-{% endif %}
+{% set total_lessons = course_rows|sum(attribute='1') %}
+<div class="page-header">
+  <div>
+    <p class="page-header__eyebrow">TodayClass</p>
+    <h1 class="page-header__title">Cursos</h1>
+    <p class="page-header__lead">Escolha um curso para ver as aulas.</p>
+  </div>
+  <div class="page-header__actions">
+    <div class="stat-group">
+      <div class="stat">
+        <span class="stat__label">Cursos</span>
+        <span class="stat__value">{{ course_rows|length }}</span>
+      </div>
+      <span class="stat-group__divider" aria-hidden="true"></span>
+      <div class="stat">
+        <span class="stat__label">Aulas</span>
+        <span class="stat__value stat__value--primary">{{ total_lessons }}</span>
+      </div>
+    </div>
+    {% if current_user.role == 'admin' %}
+    <a class="button" href="{{ url_for('new_course') }}">Criar curso</a>
+    {% endif %}
+  </div>
+</div>
+<div class="list-panel">
+  {% if not course_rows %}
+  <div class="empty-state">
+    <p class="empty-state__title">Nenhum curso ainda.</p>
+  </div>
+  {% else %}
+  <div class="list-panel__head">
+    <span>Curso</span>
+    <span>Aulas</span>
+  </div>
+  <ul class="course-list">
+    {% for course, lesson_count in course_rows %}
+    <li>
+      <a class="course-row" href="{{ url_for('view_course', course_id=course.id) }}">
+        <span class="course-row__icon" aria-hidden="true">{{ course.name[:1] }}</span>
+        <span class="course-row__body">
+          <span class="course-row__title">{{ course.name }}</span>
+        </span>
+        <span class="course-row__meta">{{ lesson_count }} {{ 'aula' if lesson_count == 1 else 'aulas' }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
 {% endblock %}

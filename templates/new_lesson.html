@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Nova aula · TodayClass{% endblock %}
+{% block content %}
+<div class="context-bar">
+  <a class="back-link" href="{{ url_for('view_course', course_id=course.id) }}">{{ course.name }}</a>
+</div>
+<div class="page-header">
+  <div>
+    <p class="page-header__eyebrow">{{ course.name }}</p>
+    <h1 class="page-header__title">Nova aula</h1>
+  </div>
+</div>
+{% if error %}
+<p class="alert alert--error" role="alert">{{ error }}</p>
+{% endif %}
+<form class="form-stack" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label>
+    Dia
+    <input class="input--day" type="number" name="day" min="1" max="9999" step="1" required value="{{ day_value }}">
+  </label>
+  <label>
+    Título
+    <input type="text" name="title" maxlength="120" required value="{{ title }}">
+  </label>
+  <label>
+    Conteúdo
+    <textarea class="textarea--editor" name="content" required>{{ content }}</textarea>
+  </label>
+  <div class="form-section">
+    <h2 class="form-section__title">Links</h2>
+    <p class="form-section__hint">Opcional. Deixe a linha em branco para ignorar.</p>
+    {% for link_title, url in link_rows %}
+    <div class="link-row">
+      <label>
+        Título
+        <input type="text" name="link_title" maxlength="100" value="{{ link_title }}">
+      </label>
+      <label>
+        URL
+        <input type="url" name="link_url" maxlength="255" value="{{ url }}">
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="form-actions">
+    <button type="submit">Criar aula</button>
+    <a class="button button--ghost" href="{{ url_for('view_course', course_id=course.id) }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

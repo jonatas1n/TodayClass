@@ -1,32 +1,61 @@
 {% extends "base.html" %}
-{% block title %}Day {{ course.day }}{% endblock %}
+{% block title %}{{ course.name }} · TodayClass{% endblock %}
 {% block content %}
-<p><a href="{{ url_for('course_list') }}">All courses</a></p>
-<h1>Day {{ course.day }}</h1>
-<article class="course-content">
-  {{ course.content|safe }}
-</article>
-{% if course.links %}
-<h2>Links</h2>
-<ul>
-  {% for link in course.links %}
-  <li><a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.title }}</a></li>
+{% set lesson_count = course.lessons|length %}
+{% set completed_count = course.lessons|selectattr('is_completed')|list|length %}
+<div class="context-bar">
+  <a class="back-link" href="{{ url_for('course_list') }}">Todos os cursos</a>
+</div>
+<div class="page-header">
+  <div>
+    <p class="page-header__eyebrow">Curso</p>
+    <h1 class="page-header__title">{{ course.name }}</h1>
+  </div>
+  {% if current_user.role == 'admin' %}
+  <div class="page-header__actions">
+    <a class="button button--small" href="{{ url_for('new_lesson', course_id=course.id) }}">Nova aula</a>
+  </div>
+  {% endif %}
+</div>
+<div class="progress-panel">
+  <div class="progress-panel__head">
+    <span class="progress-panel__label">Progresso</span>
+    <span>{{ completed_count }} de {{ lesson_count }} concluídas</span>
+  </div>
+  <progress class="progress-bar" value="{{ completed_count }}" max="{{ lesson_count if lesson_count else 1 }}">{{ completed_count }} de {{ lesson_count }}</progress>
+</div>
+<div class="list-toolbar">
+  <h2 class="list-toolbar__title">Aulas</h2>
+  <span class="list-toolbar__meta">{{ lesson_count }} {{ 'aula' if lesson_count == 1 else 'aulas' }}</span>
+</div>
+{% if not course.lessons %}
+<div class="list-panel">
+  <div class="empty-state">
+    <p class="empty-state__title">Nenhuma aula ainda.</p>
+  </div>
+</div>
+{% else %}
+<ul class="lesson-list">
+  {% for lesson in course.lessons %}
+  <li>
+    <a class="lesson-row{% if lesson.is_completed %} lesson-row--completed{% endif %}" href="{{ url_for('view_lesson', course_id=course.id, lesson_id=lesson.id) }}">
+      <span class="lesson-row__main">
+        <span class="lesson-row__marker" aria-hidden="true"></span>
+        <span class="lesson-row__body">
+          <span class="lesson-row__title">{{ lesson.label }}</span>
+          {% if lesson.completed_at %}
+          <span class="lesson-row__meta">Concluída em {{ lesson.completed_at.strftime('%Y-%m-%d %H:%M') }} UTC</span>
+          {% endif %}
+        </span>
+      </span>
+      {% if lesson.is_completed %}
+      <span class="status-badge status-badge--completed">Concluída</span>
+      {% else %}
+      <span class="status-badge status-badge--pending">Pendente</span>
+      {% endif %}
+    </a>
+  </li>
   {% endfor %}
 </ul>
-{% endif %}
-{% if course.is_completed %}
-<p>
-  Completed
-  {% if course.completed_at %}
-  on {{ course.completed_at.strftime('%Y-%m-%d %H:%M') }} UTC
-  {% endif %}
-</p>
-{% elif current_user.role == 'student' %}
-<form class="action" method="post">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-  <button type="submit">Mark as Done</button>
-</form>
-{% else %}
-<p>Not completed yet.</p>
 {% endif %}
 {% endblock %}

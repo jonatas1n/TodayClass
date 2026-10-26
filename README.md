@@ -1,4 +1,4 @@
-# Barbosinha Course
+# TodayClass
 
 Um curso por dia, no celular. Você escreve a aula, seu pai lê e marca como feita. O progresso fica num SQLite, e o site cabe no plano gratuito do [PythonAnywhere](https://www.pythonanywhere.com/).
 

@@ -1,34 +1,26 @@
 {% extends "base.html" %}
-{% block title %}New course{% endblock %}
+{% block title %}Novo curso · TodayClass{% endblock %}
 {% block content %}
-<h1>New course</h1>
+<div class="context-bar">
+  <a class="back-link" href="{{ url_for('course_list') }}">Todos os cursos</a>
+</div>
+<div class="page-header">
+  <div>
+    <h1 class="page-header__title">Novo curso</h1>
+  </div>
+</div>
 {% if error %}
-<p role="alert">{{ error }}</p>
+<p class="alert alert--error" role="alert">{{ error }}</p>
 {% endif %}
-<form method="post">
+<form class="form-stack" method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <label>
-    Day
-    <input type="number" name="day" min="1" step="1" required value="{{ day_value }}">
+    Nome
+    <input type="text" name="name" maxlength="120" required value="{{ name }}">
   </label>
-  <label>
-    Content
-    <textarea class="course-editor" name="content" required>{{ content }}</textarea>
-  </label>
-  <h2>Links</h2>
-  <p>Optional. Leave a row blank to skip it.</p>
-  {% for title, url in link_rows %}
-  <div class="compact-row">
-    <label>
-      Title
-      <input type="text" name="link_title" maxlength="100" value="{{ title }}">
-    </label>
-    <label>
-      URL
-      <input type="url" name="link_url" maxlength="255" value="{{ url }}">
-    </label>
+  <div class="form-actions">
+    <button type="submit">Criar curso</button>
+    <a class="button button--ghost" href="{{ url_for('course_list') }}">Cancelar</a>
   </div>
-  {% endfor %}
-  <button type="submit">Create course</button>
 </form>
 {% endblock %}

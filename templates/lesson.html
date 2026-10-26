@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.label }} · TodayClass{% endblock %}
+{% block content %}
+<div class="context-bar">
+  <a class="back-link" href="{{ url_for('view_course', course_id=lesson.course_id) }}">{{ lesson.course.name }}</a>
+</div>
+<article class="lesson-article">
+  <header class="lesson-article__header">
+    <p class="lesson-article__eyebrow">{{ lesson.course.name }}</p>
+    <h1 class="lesson-article__title">{{ lesson.label }}</h1>
+  </header>
+  <div class="lesson-content">
+    {{ lesson.content|safe }}
+  </div>
+  {% if lesson.links %}
+  <section class="resource-links">
+    <h2 class="resource-links__title">Links</h2>
+    <ul class="resource-links__list">
+      {% for link in lesson.links %}
+      <li><a class="resource-links__link" href="{{ link.url }}" target="_blank" rel="noopener">{{ link.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  <section class="lesson-status">
+    <div>
+      <span class="lesson-status__eyebrow">Situação</span>
+    </div>
+    {% if lesson.is_completed %}
+    <div>
+      <span class="completion-badge">
+        Concluída
+        {% if lesson.completed_at %}
+        em {{ lesson.completed_at.strftime('%Y-%m-%d %H:%M') }} UTC
+        {% endif %}
+      </span>
+    </div>
+    {% elif current_user.role == 'student' %}
+    <form class="lesson-status__action" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit">Marcar como feita</button>
+    </form>
+    {% else %}
+    <p class="completion-note">Ainda não concluída.</p>
+    {% endif %}
+  </section>
+</article>
+{% endblock %}
