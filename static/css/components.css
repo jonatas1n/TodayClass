@@ -395,6 +395,29 @@
   transform: translateX(0.125rem);
 }
 
+.course-row--locked {
+  cursor: default;
+}
+
+.course-row--locked:hover {
+  background: transparent;
+}
+
+.course-row--locked:hover .course-row__icon {
+  color: var(--color-primary);
+  background: var(--color-surface-container);
+}
+
+.course-row--locked:hover .course-row__title,
+.course-row--locked .course-row__title {
+  color: var(--color-secondary);
+}
+
+.course-row--locked:hover .course-row__meta .lucide {
+  color: var(--color-outline);
+  transform: none;
+}
+
 /* Empty state */
 .empty-state {
   display: flex;
@@ -914,6 +937,35 @@
   margin: 0;
   font: var(--font-body-sm);
   color: var(--color-secondary);
+}
+
+.question-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-width: var(--control-max-width);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-surface-container-high);
+}
+
+.question-block__prompt {
+  margin: 0;
+  font: var(--font-body-md);
+  font-weight: 600;
+}
+
+.question-answer {
+  margin: 0;
+  font: var(--font-body-sm);
+  white-space: pre-wrap;
+}
+
+.question-answer--empty {
+  color: var(--color-secondary);
+}
+
+textarea.textarea--question {
+  min-height: 4.5rem;
 }
 
 /* Two controls side by side on wider screens, stacked on mobile */

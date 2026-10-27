@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ lesson.label }} · TodayClass{% endblock %}
+{% block title %}{{ lesson.label }} · DiáriaMente{% endblock %}
 {% block content %}
 <div class="context-bar">
   <a class="back-link" href="{{ url_for('view_course', course_id=lesson.course_id) }}"><i data-lucide="arrow-left" aria-hidden="true"></i>{{ lesson.course.name }}</a>

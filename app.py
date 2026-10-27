@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from functools import wraps
 import os
 import secrets
@@ -42,21 +43,32 @@ MAXIMUM_LESSON_TITLE_LENGTH = 120
 MAXIMUM_DAY_NUMBER = 9999
 MAXIMUM_LINK_TITLE_LENGTH = 100
 MAXIMUM_LINK_URL_LENGTH = 255
+MAXIMUM_QUESTION_PROMPT_LENGTH = 500
+MAXIMUM_QUESTION_ANSWER_LENGTH = 4000
 LINK_ROW_COUNT = 4
 GENERIC_COURSE_NAME = 'Curso geral'
 LEGACY_COURSE_TABLE = 'legacy_course'
 LEGACY_LINK_TABLE = 'legacy_link'
+SAO_PAULO = ZoneInfo('America/Sao_Paulo')
 
 
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(MAXIMUM_COURSE_NAME_LENGTH), nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
     lessons = db.relationship(
         'Lesson',
         backref='course',
         lazy=True,
         cascade='all, delete-orphan',
         order_by=lambda: (Lesson.day, Lesson.id),
+    )
+    questions = db.relationship(
+        'Question',
+        backref='course',
+        lazy=True,
+        cascade='all, delete-orphan',
+        order_by=lambda: (Question.position, Question.id),
     )
 
 
@@ -78,6 +90,14 @@ class Lesson(db.Model):
     @property
     def label(self):
         return f'Dia {self.day} - {self.title}'
+
+
+class Question(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    position = db.Column(db.Integer, nullable=False)
+    prompt = db.Column(db.String(MAXIMUM_QUESTION_PROMPT_LENGTH), nullable=False)
+    answer = db.Column(db.Text, nullable=True)
 
 
 class Link(db.Model):
@@ -102,6 +122,114 @@ class User(UserMixin, db.Model):
 
 def naive_utc_now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def as_utc(moment):
+    if moment.tzinfo is None:
+        return moment.replace(tzinfo=timezone.utc)
+    return moment.astimezone(timezone.utc)
+
+
+def sao_paulo_date(moment):
+    return as_utc(moment).astimezone(SAO_PAULO).date()
+
+
+def lessons_are_finished(course):
+    return all(lesson.is_completed for lesson in course.lessons)
+
+
+def questions_are_answered(course):
+    return all((question.answer or '').strip() for question in course.questions)
+
+
+def course_requirements_met(course):
+    if not course.lessons and not course.questions:
+        return False
+    if not lessons_are_finished(course):
+        return False
+    return questions_are_answered(course)
+
+
+def apply_completion_state(course, moment):
+    if course_requirements_met(course):
+        if course.completed_at is not None:
+            return False
+        course.completed_at = moment
+        return True
+    if course.completed_at is None:
+        return False
+    course.completed_at = None
+    return True
+
+
+def ordered_courses():
+    return (
+        Course.query.options(selectinload(Course.lessons), selectinload(Course.questions))
+        .order_by(Course.id)
+        .all()
+    )
+
+
+def sync_course_completions(courses, moment):
+    changed = False
+    for course in courses:
+        if apply_completion_state(course, moment):
+            changed = True
+    if changed:
+        db.session.commit()
+
+
+def course_availability(previous_course, today):
+    if previous_course is None:
+        return True, None
+    if previous_course.completed_at is None:
+        return False, 'Disponível depois de concluir o curso anterior'
+    unlock_on = sao_paulo_date(previous_course.completed_at) + timedelta(days=1)
+    if today >= unlock_on:
+        return True, None
+    return False, f'Disponível em {unlock_on.strftime("%d/%m/%Y")}'
+
+
+def course_rows_for_viewer(moment=None):
+    moment = moment or naive_utc_now()
+    courses = ordered_courses()
+    sync_course_completions(courses, moment)
+    today = sao_paulo_date(moment)
+    rows = []
+    previous_course = None
+    for course in courses:
+        available, lock_label = course_availability(previous_course, today)
+        if current_user.role == ADMIN_ROLE:
+            available = True
+            lock_label = None
+        rows.append((course, len(course.lessons), available, lock_label))
+        previous_course = course
+    return rows
+
+
+def course_is_open(course, moment=None):
+    if current_user.role == ADMIN_ROLE:
+        return True
+    moment = moment or naive_utc_now()
+    courses = ordered_courses()
+    sync_course_completions(courses, moment)
+    today = sao_paulo_date(moment)
+    previous_course = None
+    for candidate in courses:
+        if candidate.id == course.id:
+            available, _lock_label = course_availability(previous_course, today)
+            return available
+        previous_course = candidate
+    return False
+
+
+def course_status_note(course):
+    if course.completed_at is not None:
+        finished_on = sao_paulo_date(course.completed_at).strftime('%d/%m/%Y')
+        return f'Curso concluído em {finished_on}.'
+    if not course.questions or questions_are_answered(course):
+        return None
+    return 'Responda as perguntas para concluir o curso.'
 
 
 def username_validation_error(username):
@@ -255,11 +383,23 @@ def seed_sample_course():
     db.session.commit()
 
 
+def ensure_course_completed_at():
+    with db.engine.begin() as connection:
+        begin_explicit_transaction(connection)
+        table_names = existing_table_names(connection)
+        if 'course' not in table_names:
+            return
+        if 'completed_at' in table_column_names(connection, 'course'):
+            return
+        connection.exec_driver_sql('ALTER TABLE course ADD COLUMN completed_at DATETIME')
+
+
 def prepare_database():
     try:
         rename_legacy_tables()
         db.create_all()
         copy_legacy_rows()
+        ensure_course_completed_at()
     except Exception:
         app.logger.exception('Database migration failed')
         raise
@@ -431,6 +571,134 @@ def create_course(name):
     return course, None
 
 
+def update_course(course, name):
+    error = required_text_error('O nome', name, MAXIMUM_COURSE_NAME_LENGTH)
+    if error:
+        return error
+    course.name = name
+    db.session.commit()
+    return None
+
+
+def paired_form_values(first_name, second_name):
+    first_values = request.form.getlist(first_name)
+    second_values = request.form.getlist(second_name)
+    if len(first_values) != len(second_values):
+        return None
+    return list(zip(first_values, second_values))
+
+
+def removed_question_ids():
+    removed_ids = set()
+    for raw_id in request.form.getlist('remove'):
+        if str(raw_id).isdigit():
+            removed_ids.add(int(raw_id))
+    return removed_ids
+
+
+def question_for_course(questions_by_id, raw_id):
+    if not str(raw_id).isdigit():
+        return None
+    return questions_by_id.get(int(raw_id))
+
+
+def values_by_question_id(posted_rows):
+    values = {}
+    for raw_id, raw_value in posted_rows:
+        if str(raw_id).isdigit():
+            values[int(raw_id)] = raw_value
+    return values
+
+
+def validated_question_updates(questions_by_id, posted_rows, removed_ids):
+    updates = []
+    for raw_id, raw_prompt in posted_rows:
+        question = question_for_course(questions_by_id, raw_id)
+        if question is None:
+            return None, 'Pergunta não encontrada.'
+        if question.id in removed_ids:
+            continue
+        prompt = raw_prompt.strip()
+        error = required_text_error('O texto da pergunta', prompt, MAXIMUM_QUESTION_PROMPT_LENGTH)
+        if error:
+            return None, error
+        updates.append((question, prompt))
+    return updates, None
+
+
+def validated_new_prompt(raw_prompt):
+    prompt = raw_prompt.strip()
+    if not prompt:
+        return '', None
+    error = required_text_error('O texto da pergunta', prompt, MAXIMUM_QUESTION_PROMPT_LENGTH)
+    if error:
+        return None, error
+    return prompt, None
+
+
+def unknown_removed_question(questions_by_id, removed_ids):
+    for question_id in removed_ids:
+        if question_id not in questions_by_id:
+            return True
+    return False
+
+
+def apply_question_changes(course, posted_rows, new_prompt_raw, removed_ids):
+    questions_by_id = {question.id: question for question in course.questions}
+    if unknown_removed_question(questions_by_id, removed_ids):
+        return 'Pergunta não encontrada.'
+
+    updates, error = validated_question_updates(questions_by_id, posted_rows, removed_ids)
+    if error:
+        return error
+    new_prompt, error = validated_new_prompt(new_prompt_raw)
+    if error:
+        return error
+
+    next_position = max((question.position for question in course.questions), default=0) + 1
+    for question_id in removed_ids:
+        db.session.delete(questions_by_id[question_id])
+    for question, prompt in updates:
+        question.prompt = prompt
+    if new_prompt:
+        db.session.add(Question(course=course, position=next_position, prompt=new_prompt))
+    apply_completion_state(course, naive_utc_now())
+    db.session.commit()
+    return None
+
+
+def answer_text_error(answer):
+    if len(answer) > MAXIMUM_QUESTION_ANSWER_LENGTH:
+        return 'A resposta é longa demais.'
+    return None
+
+
+def validated_answer_updates(questions_by_id, posted_rows):
+    updates = []
+    for raw_id, raw_answer in posted_rows:
+        question = question_for_course(questions_by_id, raw_id)
+        if question is None:
+            return None, 'Pergunta não encontrada.'
+        answer = raw_answer.strip()
+        error = answer_text_error(answer)
+        if error:
+            return None, error
+        updates.append((question, answer or None))
+    return updates, None
+
+
+def save_answers(course, posted_rows):
+    questions_by_id = {question.id: question for question in course.questions}
+    updates, error = validated_answer_updates(questions_by_id, posted_rows)
+    if error:
+        return error
+    for question, answer in updates:
+        question.answer = answer
+    apply_completion_state(course, naive_utc_now())
+    db.session.commit()
+    return None
+
+
 def create_lesson(course, raw_day, title, content, link_rows):
     day_number = parse_day_number(raw_day)
     pairs = completed_link_pairs(link_rows)
@@ -540,7 +808,7 @@ def home():
 @app.route('/courses')
 @login_required
 def course_list():
-    return render_template('courses.html', course_rows=courses_with_lesson_counts())
+    return render_template('courses.html', course_rows=course_rows_for_viewer())
 
 
 @app.route('/courses/new', methods=['GET', 'POST'])
@@ -555,14 +823,124 @@ def new_course():
         if error is None:
             return redirect(url_for('view_course', course_id=course.id))
 
-    return render_template('new_course.html', error=error, name=name)
+    return render_template(
+        'new_course.html',
+        error=error,
+        name=name,
+        page_title='Novo curso',
+        submit_label='Criar curso',
+        submit_icon='plus',
+        cancel_url=url_for('course_list'),
+        back_label='Todos os cursos',
+    )
+
+
+def render_course_page(course, question_error=None, answer_error=None, new_prompt='', removed_ids=None, posted_prompts=None, posted_answers=None):
+    return render_template(
+        'course.html',
+        course=course,
+        question_error=question_error,
+        answer_error=answer_error,
+        new_prompt=new_prompt,
+        removed_ids=removed_ids or set(),
+        posted_prompts=posted_prompts or {},
+        posted_answers=posted_answers or {},
+        status_note=course_status_note(course),
+    )
+
+
+def locked_course_redirect(course):
+    if course_is_open(course):
+        return None
+    return redirect(url_for('course_list'))
 
 
 @app.route('/courses/<int:course_id>')
 @login_required
 def view_course(course_id):
     course = db.get_or_404(Course, course_id)
-    return render_template('course.html', course=course)
+    locked = locked_course_redirect(course)
+    if locked is not None:
+        return locked
+    return render_course_page(course)
+
+
+@app.route('/courses/<int:course_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_course(course_id):
+    course = db.get_or_404(Course, course_id)
+    error = None
+    name = course.name
+    if request.method == 'POST':
+        validate_csrf()
+        name = request.form.get('name', '').strip()
+        error = update_course(course, name)
+        if error is None:
+            return redirect(url_for('view_course', course_id=course.id))
+
+    return render_template(
+        'new_course.html',
+        error=error,
+        name=name,
+        page_title='Editar curso',
+        submit_label='Salvar',
+        submit_icon='check',
+        cancel_url=url_for('view_course', course_id=course.id),
+        back_label=course.name,
+    )
+
+
+@app.route('/courses/<int:course_id>/questions', methods=['POST'])
+@admin_required
+def save_course_questions(course_id):
+    course = db.get_or_404(Course, course_id)
+    validate_csrf()
+    posted_rows = paired_form_values('question_id', 'prompt')
+    new_prompt = request.form.get('new_prompt', '')
+    removed_ids = removed_question_ids()
+    if posted_rows is None:
+        return render_course_page(
+            course,
+            question_error='Pergunta não encontrada.',
+            new_prompt=new_prompt,
+            removed_ids=removed_ids,
+        )
+
+    error = apply_question_changes(course, posted_rows, new_prompt, removed_ids)
+    if error:
+        return render_course_page(
+            course,
+            question_error=error,
+            new_prompt=new_prompt,
+            removed_ids=removed_ids,
+            posted_prompts=values_by_question_id(posted_rows),
+        )
+    return redirect(url_for('view_course', course_id=course.id))
+
+
+@app.route('/courses/<int:course_id>/answers', methods=['POST'])
+@login_required
+def save_course_answers(course_id):
+    course = db.get_or_404(Course, course_id)
+    validate_csrf()
+    if current_user.role != STUDENT_ROLE:
+        abort(403)
+    locked = locked_course_redirect(course)
+    if locked is not None:
+        return locked
+
+    posted_rows = paired_form_values('question_id', 'answer')
+    if posted_rows is None:
+        return render_course_page(course, answer_error='Pergunta não encontrada.')
+
+    error = save_answers(course, posted_rows)
+    if error:
+        return render_course_page(
+            course,
+            answer_error=error,
+            posted_answers=values_by_question_id(posted_rows),
+        )
+    return redirect(url_for('view_course', course_id=course.id))
 
 
 @app.route('/courses/<int:course_id>/lessons/new', methods=['GET', 'POST'])
@@ -631,6 +1009,9 @@ def edit_lesson(course_id, lesson_id):
 @login_required
 def view_lesson(course_id, lesson_id):
     lesson = find_lesson_or_404(course_id, lesson_id)
+    locked = locked_course_redirect(lesson.course)
+    if locked is not None:
+        return locked
     if request.method == 'GET':
         return render_template('lesson.html', lesson=lesson)
 
@@ -640,8 +1021,10 @@ def view_lesson(course_id, lesson_id):
     if lesson.is_completed:
         return redirect(url_for('success'))
 
+    moment = naive_utc_now()
     lesson.is_completed = True
-    lesson.completed_at = naive_utc_now()
+    lesson.completed_at = moment
+    apply_completion_state(lesson.course, moment)
     db.session.commit()
     return redirect(url_for('success'))
 

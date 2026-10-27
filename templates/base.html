@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}TodayClass{% endblock %}</title>
+  <title>{% block title %}DiáriaMente{% endblock %}</title>
   <link rel="icon" href="{{ url_for('static', filename='brand/favicon.png') }}" sizes="48x48">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32x32.png') }}">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='brand/favicon-16x16.png') }}">
@@ -25,7 +25,7 @@
       <div class="site-header__start">
         <a class="site-header__brand" href="{{ url_for('course_list') }}">
           <img class="brand-mark brand-mark--header" src="{{ url_for('static', filename='brand/logo.png') }}" alt="" width="28" height="28">
-          TodayClass
+          DiáriaMente
         </a>
         <nav class="site-nav">
           <a class="site-nav__link" href="{{ url_for('course_list') }}"{% if active_section == 'courses' %} aria-current="page"{% endif %}>

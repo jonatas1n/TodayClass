@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Novo curso · TodayClass{% endblock %}
+{% block title %}{{ page_title }} · DiáriaMente{% endblock %}
 {% block content %}
 <div class="context-bar">
-  <a class="back-link" href="{{ url_for('course_list') }}"><i data-lucide="arrow-left" aria-hidden="true"></i>Todos os cursos</a>
+  <a class="back-link" href="{{ cancel_url }}"><i data-lucide="arrow-left" aria-hidden="true"></i>{{ back_label }}</a>
 </div>
 <div class="page-header">
   <div>
-    <h1 class="page-header__title">Novo curso</h1>
+    <h1 class="page-header__title">{{ page_title }}</h1>
   </div>
 </div>
 {% if error %}
@@ -19,8 +19,8 @@
     <input type="text" name="name" maxlength="120" required value="{{ name }}">
   </label>
   <div class="form-actions">
-    <button type="submit"><i data-lucide="plus" aria-hidden="true"></i>Criar curso</button>
-    <a class="button button--ghost" href="{{ url_for('course_list') }}"><i data-lucide="x" aria-hidden="true"></i>Cancelar</a>
+    <button type="submit"><i data-lucide="{{ submit_icon }}" aria-hidden="true"></i>{{ submit_label }}</button>
+    <a class="button button--ghost" href="{{ cancel_url }}"><i data-lucide="x" aria-hidden="true"></i>Cancelar</a>
   </div>
 </form>
 {% endblock %}

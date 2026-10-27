@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ course.name }} · TodayClass{% endblock %}
+{% block title %}{{ course.name }} · DiáriaMente{% endblock %}
 {% block content %}
 {% set lesson_count = course.lessons|length %}
 {% set completed_count = course.lessons|selectattr('is_completed')|list|length %}
@@ -13,6 +13,7 @@
   </div>
   {% if current_user.role == 'admin' %}
   <div class="page-header__actions">
+    <a class="button button--small button--ghost" href="{{ url_for('edit_course', course_id=course.id) }}"><i data-lucide="pencil" aria-hidden="true"></i>Editar</a>
     <a class="button button--small" href="{{ url_for('new_lesson', course_id=course.id) }}"><i data-lucide="plus" aria-hidden="true"></i>Nova aula</a>
   </div>
   {% endif %}
@@ -23,6 +24,9 @@
     <span>{{ completed_count }} de {{ lesson_count }} concluídas</span>
   </div>
   <progress class="progress-bar" value="{{ completed_count }}" max="{{ lesson_count if lesson_count else 1 }}">{{ completed_count }} de {{ lesson_count }}</progress>
+  {% if status_note %}
+  <p class="completion-note">{{ status_note }}</p>
+  {% endif %}
 </div>
 <div class="list-toolbar">
   <h2 class="list-toolbar__title">Aulas</h2>
@@ -61,5 +65,66 @@
   </li>
   {% endfor %}
 </ul>
+{% endif %}
+{% if current_user.role == 'admin' %}
+<section class="section">
+  <h2 class="section__title">Perguntas</h2>
+  {% if question_error %}
+  <p class="alert alert--error" role="alert"><i data-lucide="circle-alert" aria-hidden="true"></i><span>{{ question_error }}</span></p>
+  {% endif %}
+  <form class="form-stack" method="post" action="{{ url_for('save_course_questions', course_id=course.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% for question in course.questions %}
+    <div class="question-block">
+      <input type="hidden" name="question_id" value="{{ question.id }}">
+      <label>
+        Pergunta
+        <textarea class="textarea--question" name="prompt" maxlength="500">{{ posted_prompts.get(question.id, question.prompt) }}</textarea>
+      </label>
+      <p class="form-section__hint">Resposta do aluno</p>
+      {% if question.answer %}
+      <p class="question-answer">{{ question.answer }}</p>
+      {% else %}
+      <p class="question-answer question-answer--empty">Ainda sem resposta.</p>
+      {% endif %}
+      <label>
+        <input type="checkbox" name="remove" value="{{ question.id }}"{% if question.id in removed_ids %} checked{% endif %}>
+        Remover
+      </label>
+    </div>
+    {% endfor %}
+    <label>
+      Nova pergunta
+      <textarea class="textarea--question" name="new_prompt" maxlength="500">{{ new_prompt }}</textarea>
+    </label>
+    <p class="form-section__hint">Opcional. Deixe em branco para não adicionar.</p>
+    <div class="form-actions">
+      <button type="submit"><i data-lucide="check" aria-hidden="true"></i>Salvar perguntas</button>
+    </div>
+  </form>
+</section>
+{% elif course.questions %}
+<section class="section">
+  <h2 class="section__title">Perguntas</h2>
+  {% if answer_error %}
+  <p class="alert alert--error" role="alert"><i data-lucide="circle-alert" aria-hidden="true"></i><span>{{ answer_error }}</span></p>
+  {% endif %}
+  <form class="form-stack" method="post" action="{{ url_for('save_course_answers', course_id=course.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% for question in course.questions %}
+    <div class="question-block">
+      <input type="hidden" name="question_id" value="{{ question.id }}">
+      <p class="question-block__prompt">{{ question.prompt }}</p>
+      <label>
+        Resposta
+        <textarea name="answer" maxlength="4000">{{ posted_answers.get(question.id, question.answer or '') }}</textarea>
+      </label>
+    </div>
+    {% endfor %}
+    <div class="form-actions">
+      <button type="submit"><i data-lucide="check" aria-hidden="true"></i>Salvar respostas</button>
+    </div>
+  </form>
+</section>
 {% endif %}
 {% endblock %}
