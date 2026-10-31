@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload, selectinload
 
 from .models import Course, Lesson, Link, Question, User, db, naive_utc_now
-from .schedule import apply_completion_state, course_availability, sao_paulo_date
+from .schedule import apply_completion_state, availability_by_course_id, sao_paulo_date
 from .validation import (
     MAXIMUM_COURSE_NAME_LENGTH,
     MAXIMUM_QUESTION_ANSWER_LENGTH,
@@ -97,38 +97,30 @@ def sync_course_completions(courses, moment=None):
     db.session.commit()
 
 
-def catalog_for(is_admin, moment=None):
-    moment = moment or naive_utc_now()
+def synced_availability_by_course_id(moment):
     courses = ordered_courses()
     sync_course_completions(courses, moment)
-    today = sao_paulo_date(moment)
+    return courses, availability_by_course_id(courses, sao_paulo_date(moment))
+
+
+def catalog_for(is_admin, moment=None):
+    courses, availability = synced_availability_by_course_id(moment or naive_utc_now())
     rows = []
-    previous_course = None
     for course in courses:
-        available, reason = course_availability(previous_course, today)
+        available, reason = availability[course.id]
         if is_admin:
             available = True
             reason = None
         rows.append((course, len(course.lessons), available, reason))
-        previous_course = course
     return rows
 
 
 def unavailable_reason(course, moment=None):
-    moment = moment or naive_utc_now()
-    courses = ordered_courses()
-    sync_course_completions(courses, moment)
-    today = sao_paulo_date(moment)
-    previous_course = None
-    for candidate in courses:
-        if candidate.id != course.id:
-            previous_course = candidate
-            continue
-        available, reason = course_availability(previous_course, today)
-        if available:
-            return None
-        return reason
-    return None
+    _courses, availability = synced_availability_by_course_id(moment or naive_utc_now())
+    available, reason = availability.get(course.id, (True, None))
+    if available:
+        return None
+    return reason
 
 
 def remember_completion(course):

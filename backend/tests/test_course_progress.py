@@ -78,22 +78,24 @@ def test_course_completes_only_when_lessons_and_answers_are_done(admin_api, stud
     answered = student_api.post('/api/courses/1/answers', {
         'answers': [{'id': question['id'], 'answer': 'Lisboa'}],
     })
-    assert answered.get_json()['course']['completed_at'].endswith('Z')
+    completed_at = answered.get_json()['course']['completed_at']
+    assert completed_at.endswith('Z')
 
     cleared = student_api.post('/api/courses/1/answers', {
         'answers': [{'id': question['id'], 'answer': '  '}],
     })
-    assert cleared.get_json()['course']['completed_at'] is None
+    assert cleared.get_json()['course']['completed_at'] == completed_at
 
 
-def test_new_lesson_clears_completion(admin_api, student_api):
+def test_new_lesson_keeps_completion(admin_api, student_api):
     student_api.post('/api/courses/1/lessons/1/complete')
-    assert student_api.get('/api/courses/1').get_json()['course']['completed_at'] is not None
+    completed_at = student_api.get('/api/courses/1').get_json()['course']['completed_at']
+    assert completed_at is not None
 
     created = admin_api.post('/api/courses/1/lessons', VALID_LESSON)
 
     assert created.status_code == 201
-    assert student_api.get('/api/courses/1').get_json()['course']['completed_at'] is None
+    assert student_api.get('/api/courses/1').get_json()['course']['completed_at'] == completed_at
 
 
 def test_next_course_opens_on_the_following_sao_paulo_day(admin_api, student_api):

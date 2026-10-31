@@ -46,7 +46,7 @@ frontend/
 
 Todo `POST`, `PUT`, `PATCH` e `DELETE` precisa de corpo JSON e do cabeçalho `X-CSRF-Token` com o token de `/api/session`. O `frontend/public/js/api.js` cuida disso.
 
-Os cursos seguem a ordem de criação. O primeiro fica aberto. O seguinte abre no dia seguinte, no calendário de São Paulo, depois da conclusão do anterior. Cada item da lista traz `completed_at`, `completed_on` (data em São Paulo), `is_available` e `unavailable_reason`. O admin não fica bloqueado. O aluno que abre um curso ou uma aula ainda fechados recebe 403 com esse motivo. O curso só fica concluído quando todas as aulas estão feitas e toda pergunta tem resposta. Um curso sem perguntas conclui quando as aulas acabam. Um curso sem aulas e sem perguntas não conclui.
+Os cursos seguem a ordem de criação. O primeiro fica aberto. O seguinte abre no dia seguinte, no calendário de São Paulo, depois da conclusão do anterior. Cada item da lista traz `completed_at`, `completed_on` (data em São Paulo), `is_available` e `unavailable_reason`. O admin não fica bloqueado. O aluno que abre um curso ou uma aula ainda fechados recebe 403 com esse motivo. O curso só fica concluído quando todas as aulas estão feitas e toda pergunta tem resposta. Um curso sem perguntas conclui quando as aulas acabam. Um curso sem aulas e sem perguntas não conclui e não bloqueia os seguintes: cada curso depende do curso anterior mais próximo que tenha conteúdo. Depois de concluído, o curso continua concluído, mesmo que o admin adicione aulas ou perguntas.
 
 O conteúdo da aula é HTML e é renderizado de propósito. Escreva o texto você mesmo e não cole HTML de outra pessoa.
 
