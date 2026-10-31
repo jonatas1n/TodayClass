@@ -5,7 +5,7 @@ import os
 import secrets
 from urllib.parse import urlparse
 
-from flask import Flask, abort, redirect, render_template, request, session, url_for
+from flask import Flask, abort, redirect, render_template, request, send_from_directory, session, url_for
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, text
@@ -1117,6 +1117,20 @@ def admin_dashboard():
     )
     users = User.query.order_by(User.username).all()
     return render_template('admin.html', lessons=lessons, users=users, error=error)
+
+
+@app.route('/manifest.webmanifest')
+def web_app_manifest():
+    return send_from_directory(
+        os.path.join(app.static_folder, 'brand'),
+        'manifest.json',
+        mimetype='application/manifest+json',
+    )
+
+
+@app.route('/sw.js')
+def service_worker():
+    return send_from_directory(app.static_folder, 'sw.js', mimetype='text/javascript')
 
 
 if __name__ == '__main__':

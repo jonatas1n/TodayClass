@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32x32.png') }}">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='brand/favicon-16x16.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='brand/manifest.json') }}">
+  <link rel="manifest" href="{{ url_for('web_app_manifest') }}">
   <meta name="theme-color" content="#4338c9">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,6 +59,16 @@
   <script src="{{ url_for('static', filename='js/lucide.min.js') }}"></script>
   <script>
     lucide.createIcons();
+  </script>
+  <script>
+    (function registerInstallServiceWorker() {
+      if (!("serviceWorker" in navigator)) {
+        return;
+      }
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error) => {
+        console.error(error);
+      });
+    })();
   </script>
 </body>
 </html>
