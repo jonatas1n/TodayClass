@@ -21,7 +21,7 @@ def development_secret_key():
 
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'courses.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///' + os.path.join(basedir, 'courses.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or development_secret_key()
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -142,8 +142,12 @@ def questions_are_answered(course):
     return all((question.answer or '').strip() for question in course.questions)
 
 
+def course_has_content(course):
+    return bool(course.lessons or course.questions)
+
+
 def course_requirements_met(course):
-    if not course.lessons and not course.questions:
+    if not course_has_content(course):
         return False
     if not lessons_are_finished(course):
         return False
@@ -151,14 +155,12 @@ def course_requirements_met(course):
 
 
 def apply_completion_state(course, moment):
-    if course_requirements_met(course):
-        if course.completed_at is not None:
-            return False
-        course.completed_at = moment
-        return True
-    if course.completed_at is None:
+    # Completion is never revoked: it is what unlocks the next course, so new content must not re-lock it.
+    if course.completed_at is not None:
         return False
-    course.completed_at = None
+    if not course_requirements_met(course):
+        return False
+    course.completed_at = moment
     return True
 
 
@@ -190,37 +192,41 @@ def course_availability(previous_course, today):
     return False, f'Disponível em {unlock_on.strftime("%d/%m/%Y")}'
 
 
-def course_rows_for_viewer(moment=None):
-    moment = moment or naive_utc_now()
+def availability_by_course_id(courses, today):
+    # Empty courses can never be completed, so they must not gate the courses after them.
+    availability = {}
+    gating_course = None
+    for course in courses:
+        availability[course.id] = course_availability(gating_course, today)
+        if course_has_content(course):
+            gating_course = course
+    return availability
+
+
+def synced_availability_by_course_id(moment):
     courses = ordered_courses()
     sync_course_completions(courses, moment)
-    today = sao_paulo_date(moment)
+    return courses, availability_by_course_id(courses, sao_paulo_date(moment))
+
+
+def course_rows_for_viewer(moment=None):
+    courses, availability = synced_availability_by_course_id(moment or naive_utc_now())
     rows = []
-    previous_course = None
     for course in courses:
-        available, lock_label = course_availability(previous_course, today)
+        available, lock_label = availability[course.id]
         if current_user.role == ADMIN_ROLE:
             available = True
             lock_label = None
         rows.append((course, len(course.lessons), available, lock_label))
-        previous_course = course
     return rows
 
 
 def course_is_open(course, moment=None):
     if current_user.role == ADMIN_ROLE:
         return True
-    moment = moment or naive_utc_now()
-    courses = ordered_courses()
-    sync_course_completions(courses, moment)
-    today = sao_paulo_date(moment)
-    previous_course = None
-    for candidate in courses:
-        if candidate.id == course.id:
-            available, _lock_label = course_availability(previous_course, today)
-            return available
-        previous_course = candidate
-    return False
+    _courses, availability = synced_availability_by_course_id(moment or naive_utc_now())
+    available, _lock_label = availability.get(course.id, (False, None))
+    return available
 
 
 def course_status_note(course):
