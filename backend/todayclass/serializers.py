@@ -1,3 +1,6 @@
+from .schedule import completed_on
+
+
 def utc_timestamp(value):
     if value is None:
         return None
@@ -39,13 +42,33 @@ def progress_row_payload(lesson):
     return payload
 
 
-def course_summary_payload(course, lesson_count):
-    return {'id': course.id, 'name': course.name, 'lesson_count': lesson_count}
+def question_payload(question):
+    return {
+        'id': question.id,
+        'position': question.position,
+        'prompt': question.prompt,
+        'answer': question.answer or '',
+    }
+
+
+def course_summary_payload(course, lesson_count, is_available, unavailable_reason):
+    return {
+        'id': course.id,
+        'name': course.name,
+        'lesson_count': lesson_count,
+        'completed_at': utc_timestamp(course.completed_at),
+        'completed_on': completed_on(course),
+        'is_available': is_available,
+        'unavailable_reason': unavailable_reason,
+    }
 
 
 def course_payload(course):
     return {
         'id': course.id,
         'name': course.name,
+        'completed_at': utc_timestamp(course.completed_at),
+        'completed_on': completed_on(course),
         'lessons': [lesson_summary_payload(lesson) for lesson in course.lessons],
+        'questions': [question_payload(question) for question in course.questions],
     }

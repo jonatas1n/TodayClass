@@ -9,6 +9,7 @@ from .validation import (
     MAXIMUM_LESSON_TITLE_LENGTH,
     MAXIMUM_LINK_TITLE_LENGTH,
     MAXIMUM_LINK_URL_LENGTH,
+    MAXIMUM_QUESTION_PROMPT_LENGTH,
     MAXIMUM_USERNAME_LENGTH,
 )
 
@@ -22,6 +23,7 @@ def naive_utc_now():
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(MAXIMUM_COURSE_NAME_LENGTH), nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
     lessons = db.relationship(
         'Lesson',
         backref='course',
@@ -29,6 +31,21 @@ class Course(db.Model):
         cascade='all, delete-orphan',
         order_by=lambda: (Lesson.day, Lesson.id),
     )
+    questions = db.relationship(
+        'Question',
+        backref='course',
+        lazy=True,
+        cascade='all, delete-orphan',
+        order_by=lambda: (Question.position, Question.id),
+    )
+
+
+class Question(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    position = db.Column(db.Integer, nullable=False)
+    prompt = db.Column(db.String(MAXIMUM_QUESTION_PROMPT_LENGTH), nullable=False)
+    answer = db.Column(db.Text, nullable=True)
 
 
 class Lesson(db.Model):

@@ -2,6 +2,7 @@ import os
 import sys
 
 import pytest
+from flask import g
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -26,6 +27,14 @@ def testing_config():
 @pytest.fixture
 def app():
     app = create_app(testing_config())
+
+    @app.teardown_request
+    def forget_cached_user(_error):
+        # The fixture keeps one app context for the whole test, and Flask-Login
+        # stores the user on that context. Drop it so the next request reloads
+        # the user from its own session cookie.
+        g.pop('_login_user', None)
+
     with app.app_context():
         initialize_database()
         yield app

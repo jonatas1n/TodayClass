@@ -46,7 +46,7 @@ function renderFormHeader(course, lesson) {
   const pageTitle = isEditing ? `Editar ${lesson.label}` : 'Nova aula';
   const courseUrl = `/course.html?course=${course.id}`;
 
-  document.title = `${pageTitle} · TodayClass`;
+  document.title = `${pageTitle} · DiáriaMente`;
   byId('course-link').href = courseUrl;
   byId('course-link-label').textContent = course.name;
   byId('course-name').textContent = course.name;

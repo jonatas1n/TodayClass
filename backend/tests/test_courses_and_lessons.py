@@ -15,7 +15,15 @@ def test_anonymous_user_cannot_list_courses(api):
 def test_student_lists_courses_with_lesson_counts(student_api):
     payload = student_api.get('/api/courses').get_json()
 
-    assert payload['courses'] == [{'id': 1, 'name': 'Curso geral', 'lesson_count': 1}]
+    assert payload['courses'] == [{
+        'id': 1,
+        'name': 'Curso geral',
+        'lesson_count': 1,
+        'completed_at': None,
+        'completed_on': None,
+        'is_available': True,
+        'unavailable_reason': None,
+    }]
 
 
 def test_student_cannot_create_course(student_api):

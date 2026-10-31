@@ -1,4 +1,4 @@
-# TodayClass
+# DiáriaMente
 
 Um curso por dia, no celular. Você escreve a aula, seu pai lê e marca como feita.
 
@@ -34,14 +34,19 @@ frontend/
 | `GET /api/session` | todos | usuário atual, `needs_setup` e o token CSRF |
 | `POST /api/setup` | ninguém, só na primeira vez | cria a conta de admin |
 | `POST /api/login`, `POST /api/logout` | todos | entra e sai |
-| `GET /api/courses`, `GET /api/courses/<id>` | aluno ou admin | lista os cursos e as aulas de um curso |
+| `GET /api/courses`, `GET /api/courses/<id>` | aluno ou admin | lista os cursos, com disponibilidade, e o detalhe de um curso |
 | `POST /api/courses` | admin | cria um curso |
+| `PUT /api/courses/<id>` | admin | renomeia um curso |
+| `POST /api/courses/<id>/questions` | admin | cria, edita ou remove as perguntas |
+| `POST /api/courses/<id>/answers` | aluno | grava as respostas do curso |
 | `GET /api/courses/<id>/lessons/<id>` | aluno ou admin | lê uma aula |
 | `POST`/`PUT` em `/api/courses/<id>/lessons[/<id>]` | admin | cria ou edita uma aula |
 | `POST /api/courses/<id>/lessons/<id>/complete` | aluno | marca a aula como feita |
 | `/api/admin/progress`, `/api/admin/users` | admin | progresso, logins e troca de senha |
 
 Todo `POST`, `PUT`, `PATCH` e `DELETE` precisa de corpo JSON e do cabeçalho `X-CSRF-Token` com o token de `/api/session`. O `frontend/public/js/api.js` cuida disso.
+
+Os cursos seguem a ordem de criação. O primeiro fica aberto. O seguinte abre no dia seguinte, no calendário de São Paulo, depois da conclusão do anterior. Cada item da lista traz `completed_at`, `completed_on` (data em São Paulo), `is_available` e `unavailable_reason`. O admin não fica bloqueado. O aluno que abre um curso ou uma aula ainda fechados recebe 403 com esse motivo. O curso só fica concluído quando todas as aulas estão feitas e toda pergunta tem resposta. Um curso sem perguntas conclui quando as aulas acabam. Um curso sem aulas e sem perguntas não conclui.
 
 O conteúdo da aula é HTML e é renderizado de propósito. Escreva o texto você mesmo e não cole HTML de outra pessoa.
 
@@ -81,7 +86,7 @@ turso db show todayclass --url    # libsql://todayclass-<usuario>.turso.io
 turso db tokens create todayclass
 ```
 
-Se o banco foi criado do zero, crie as tabelas e a aula de exemplo uma vez:
+Se o banco foi criado do zero, crie as tabelas e a aula de exemplo uma vez. `create_all` cria a tabela `question` e a coluna `course.completed_at` em um banco vazio. Um banco Turso que já existia antes dessas colunas precisa recebê-las à parte: o servidor não altera o schema ao subir.
 
 ```bash
 cd backend

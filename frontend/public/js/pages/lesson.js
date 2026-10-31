@@ -81,9 +81,18 @@ runPage(async () => {
     throw new ApiError('Aula não encontrada.', 404);
   }
 
-  const { lesson } = await apiRequest(lessonApiPath(courseId, lessonId));
+  let lesson;
+  try {
+    ({ lesson } = await apiRequest(lessonApiPath(courseId, lessonId)));
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      window.location.replace('/courses.html');
+      return;
+    }
+    throw error;
+  }
   const role = session.user.role;
-  document.title = `${lesson.label} · TodayClass`;
+  document.title = `${lesson.label} · DiáriaMente`;
   renderNavigation(lesson, role);
   byId('lesson-course-name').textContent = lesson.course_name;
   byId('lesson-label').textContent = lesson.label;

@@ -6,6 +6,7 @@ from ..models import Course, db
 from ..payloads import json_body
 from ..serializers import lesson_payload
 from ..services import complete_lesson, create_lesson, find_lesson_or_404, update_lesson
+from .courses import refuse_locked_course
 
 lessons_blueprint = Blueprint(
     'lessons',
@@ -28,6 +29,7 @@ def add_lesson(course_id):
 @login_required
 def read_lesson(course_id, lesson_id):
     lesson = find_lesson_or_404(course_id, lesson_id)
+    refuse_locked_course(lesson.course)
     return jsonify({'lesson': lesson_payload(lesson)})
 
 
@@ -45,5 +47,6 @@ def edit_lesson(course_id, lesson_id):
 @student_required
 def mark_lesson_complete(course_id, lesson_id):
     lesson = find_lesson_or_404(course_id, lesson_id)
+    refuse_locked_course(lesson.course)
     complete_lesson(lesson)
     return jsonify({'lesson': lesson_payload(lesson)})
