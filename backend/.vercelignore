@@ -1,0 +1,7 @@
+tests/
+scripts/
+dev.py
+courses.db
+.pytest_cache/
+__pycache__/
+requirements-dev.txt

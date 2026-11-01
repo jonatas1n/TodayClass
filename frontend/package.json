@@ -1,0 +1,9 @@
+{
+  "name": "todayclass-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev",
+    "test": "node --test tests/"
+  }
+}

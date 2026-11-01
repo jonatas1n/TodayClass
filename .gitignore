@@ -15,4 +15,9 @@ courses.db-shm
 *.sqlite3
 
 .env
+.dev.vars
 .DS_Store
+
+node_modules/
+.wrangler/
+.vercel/

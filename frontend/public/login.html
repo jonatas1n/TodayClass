@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · DiáriaMente</title>
+  <link rel="icon" href="/brand/favicon.png" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#4338c9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <script src="/js/lucide.min.js" defer></script>
+  <script type="module" src="/js/pages/login.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__start">
+        <a class="site-header__brand" id="site-brand" href="/login.html">
+          <img class="site-header__logo" src="/brand/logo.png" alt="" width="32" height="32">
+          <span class="site-header__wordmark">DiáriaMente</span>
+        </a>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <div class="auth-layout">
+      <div class="auth-card">
+        <div class="auth-card__brand">
+          <img class="brand-mark" src="/brand/logo.png" alt="" width="48" height="48">
+          <span class="auth-card__brand-name">DiáriaMente</span>
+        </div>
+        <div class="auth-card__header">
+          <h1 class="auth-card__title">Entrar</h1>
+          <p class="auth-card__subtitle">Acesse seus cursos diários.</p>
+        </div>
+        <div id="page-error" hidden></div>
+        <form class="auth-card__form form-stack" id="login-form">
+          <label>
+            E-mail
+            <input type="text" name="username" autocomplete="username" required>
+          </label>
+          <label>
+            Senha
+            <input type="password" name="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit" class="button--block"><i data-lucide="log-in" aria-hidden="true"></i>Entrar</button>
+        </form>
+        <div class="auth-card__footer" id="install-suggestion" hidden>
+          <button type="button" class="button button--secondary button--block" id="install-app">Instalar o DiáriaMente</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    (function registerInstallServiceWorker() {
+      if (!("serviceWorker" in navigator)) {
+        return;
+      }
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error) => {
+        console.error(error);
+      });
+    })();
+  </script>
+  <script>
+    (function suggestInstallOnLogin() {
+      const suggestion = document.getElementById("install-suggestion");
+      const installButton = document.getElementById("install-app");
+      if (!suggestion || !installButton) {
+        return;
+      }
+
+      const standaloneDisplay = window.matchMedia("(display-mode: standalone)").matches;
+      const iosStandalone = window.navigator.standalone === true;
+      if (standaloneDisplay || iosStandalone) {
+        suggestion.hidden = true;
+        return;
+      }
+
+      suggestion.hidden = false;
+
+      let deferredPrompt = null;
+      let promptInFlight = false;
+      let promptedOnShow = false;
+      let promptRequested = false;
+
+      function hideSuggestion() {
+        suggestion.hidden = true;
+        deferredPrompt = null;
+      }
+
+      function canPromptOnShow() {
+        const activation = navigator.userActivation;
+        if (!activation) {
+          return true;
+        }
+        return activation.isActive === true;
+      }
+
+      async function runPrompt() {
+        if (!deferredPrompt || promptInFlight) {
+          return;
+        }
+        promptInFlight = true;
+        const promptEvent = deferredPrompt;
+        try {
+          await promptEvent.prompt();
+          await promptEvent.userChoice;
+          hideSuggestion();
+        } finally {
+          promptInFlight = false;
+        }
+      }
+
+      function startPrompt() {
+        runPrompt().catch((error) => {
+          console.error(error);
+        });
+      }
+
+      installButton.addEventListener("click", () => {
+        promptRequested = true;
+        startPrompt();
+      });
+
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredPrompt = event;
+        suggestion.hidden = false;
+        const shouldPromptNow = !promptedOnShow && (promptRequested || canPromptOnShow());
+        if (!shouldPromptNow) {
+          return;
+        }
+        promptedOnShow = true;
+        startPrompt();
+      });
+
+      window.addEventListener("appinstalled", hideSuggestion);
+    })();
+  </script>
+</body>
+</html>
