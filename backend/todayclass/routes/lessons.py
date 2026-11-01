@@ -1,18 +1,27 @@
-from flask import Blueprint, jsonify
-from flask_login import login_required
+from flask import Blueprint, abort, jsonify
+from flask_login import current_user, login_required
 
 from ..auth import admin_required, student_required
 from ..models import Course, db
 from ..payloads import json_body
 from ..serializers import lesson_payload
-from ..services import complete_lesson, create_lesson, find_lesson_or_404, update_lesson
-from .courses import refuse_locked_course
+from ..services import complete_lesson, create_lesson, find_lesson_or_404, lesson_unavailable_reason, update_lesson
+from ..validation import ADMIN_ROLE
 
 lessons_blueprint = Blueprint(
     'lessons',
     __name__,
     url_prefix='/api/courses/<int:course_id>/lessons',
 )
+
+
+def refuse_locked_lesson(lesson):
+    if current_user.role == ADMIN_ROLE:
+        return
+    reason = lesson_unavailable_reason(lesson)
+    if reason is None:
+        return
+    abort(403, description=reason)
 
 
 @lessons_blueprint.post('')
@@ -29,7 +38,7 @@ def add_lesson(course_id):
 @login_required
 def read_lesson(course_id, lesson_id):
     lesson = find_lesson_or_404(course_id, lesson_id)
-    refuse_locked_course(lesson.course)
+    refuse_locked_lesson(lesson)
     return jsonify({'lesson': lesson_payload(lesson)})
 
 
@@ -47,6 +56,6 @@ def edit_lesson(course_id, lesson_id):
 @student_required
 def mark_lesson_complete(course_id, lesson_id):
     lesson = find_lesson_or_404(course_id, lesson_id)
-    refuse_locked_course(lesson.course)
+    refuse_locked_lesson(lesson)
     complete_lesson(lesson)
     return jsonify({'lesson': lesson_payload(lesson)})

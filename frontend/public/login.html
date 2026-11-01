@@ -53,8 +53,8 @@
           </label>
           <button type="submit" class="button--block"><i data-lucide="log-in" aria-hidden="true"></i>Entrar</button>
         </form>
-        <div class="auth-card__footer" id="setup-link" hidden>
-          <a href="/setup.html">Criar a primeira conta de administrador</a>
+        <div class="auth-card__footer" id="install-suggestion" hidden>
+          <button type="button" class="button button--secondary button--block" id="install-app">Instalar o DiáriaMente</button>
         </div>
       </div>
     </div>
@@ -67,6 +67,82 @@
       navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error) => {
         console.error(error);
       });
+    })();
+  </script>
+  <script>
+    (function suggestInstallOnLogin() {
+      const suggestion = document.getElementById("install-suggestion");
+      const installButton = document.getElementById("install-app");
+      if (!suggestion || !installButton) {
+        return;
+      }
+
+      const standaloneDisplay = window.matchMedia("(display-mode: standalone)").matches;
+      const iosStandalone = window.navigator.standalone === true;
+      if (standaloneDisplay || iosStandalone) {
+        suggestion.hidden = true;
+        return;
+      }
+
+      suggestion.hidden = false;
+
+      let deferredPrompt = null;
+      let promptInFlight = false;
+      let promptedOnShow = false;
+      let promptRequested = false;
+
+      function hideSuggestion() {
+        suggestion.hidden = true;
+        deferredPrompt = null;
+      }
+
+      function canPromptOnShow() {
+        const activation = navigator.userActivation;
+        if (!activation) {
+          return true;
+        }
+        return activation.isActive === true;
+      }
+
+      async function runPrompt() {
+        if (!deferredPrompt || promptInFlight) {
+          return;
+        }
+        promptInFlight = true;
+        const promptEvent = deferredPrompt;
+        try {
+          await promptEvent.prompt();
+          await promptEvent.userChoice;
+          hideSuggestion();
+        } finally {
+          promptInFlight = false;
+        }
+      }
+
+      function startPrompt() {
+        runPrompt().catch((error) => {
+          console.error(error);
+        });
+      }
+
+      installButton.addEventListener("click", () => {
+        promptRequested = true;
+        startPrompt();
+      });
+
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredPrompt = event;
+        suggestion.hidden = false;
+        const shouldPromptNow = !promptedOnShow && (promptRequested || canPromptOnShow());
+        if (!shouldPromptNow) {
+          return;
+        }
+        promptedOnShow = true;
+        startPrompt();
+      });
+
+      window.addEventListener("appinstalled", hideSuggestion);
     })();
   </script>
 </body>

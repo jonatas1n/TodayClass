@@ -2,9 +2,10 @@ from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException
 
 from .auth import login_manager, validate_csrf
-from .config import default_config
-from .models import db
+from .config import default_config, serverless_admin_credentials
+from .models import User, db
 from .routes import BLUEPRINTS
+from .validation import ADMIN_ROLE
 
 ERROR_MESSAGES = {
     401: 'Entre para continuar.',
@@ -25,11 +26,26 @@ def handle_http_error(error):
     return jsonify({'error': error_message(error)}), error.code
 
 
+def provision_serverless_admin():
+    credentials = serverless_admin_credentials()
+    if credentials is None:
+        return
+    username, password_hash = credentials
+    if User.query.filter_by(username=username).first() is not None:
+        return
+    db.session.add(User(username=username, password_hash=password_hash, role=ADMIN_ROLE))
+    db.session.commit()
+
+
 def create_app(config_overrides=None):
     app = Flask(__name__)
     app.config.update(config_overrides or default_config())
 
     db.init_app(app)
+    if app.config.get('INITIALIZE_DATABASE_ON_STARTUP'):
+        with app.app_context():
+            db.create_all()
+            provision_serverless_admin()
     login_manager.init_app(app)
     app.before_request(validate_csrf)
     app.register_error_handler(HTTPException, handle_http_error)

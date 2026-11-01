@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload, selectinload
 
 from .models import Course, Lesson, Link, Question, User, db, naive_utc_now
-from .schedule import apply_completion_state, availability_by_course_id, sao_paulo_date
+from .schedule import apply_completion_state, availability_by_lesson_id, sao_paulo_date
 from .validation import (
     MAXIMUM_COURSE_NAME_LENGTH,
     MAXIMUM_QUESTION_ANSWER_LENGTH,
@@ -97,27 +97,22 @@ def sync_course_completions(courses, moment=None):
     db.session.commit()
 
 
-def synced_availability_by_course_id(moment):
+def catalog_for(moment=None):
     courses = ordered_courses()
-    sync_course_completions(courses, moment)
-    return courses, availability_by_course_id(courses, sao_paulo_date(moment))
+    sync_course_completions(courses, moment or naive_utc_now())
+    return [(course, len(course.lessons)) for course in courses]
 
 
-def catalog_for(is_admin, moment=None):
-    courses, availability = synced_availability_by_course_id(moment or naive_utc_now())
-    rows = []
-    for course in courses:
-        available, reason = availability[course.id]
-        if is_admin:
-            available = True
-            reason = None
-        rows.append((course, len(course.lessons), available, reason))
-    return rows
+def lesson_locks_for(course, is_admin, moment=None):
+    if is_admin:
+        return {}
+    today = sao_paulo_date(moment or naive_utc_now())
+    return availability_by_lesson_id(course.lessons, today)
 
 
-def unavailable_reason(course, moment=None):
-    _courses, availability = synced_availability_by_course_id(moment or naive_utc_now())
-    available, reason = availability.get(course.id, (True, None))
+def lesson_unavailable_reason(lesson, moment=None):
+    today = sao_paulo_date(moment or naive_utc_now())
+    available, reason = availability_by_lesson_id(lesson.course.lessons, today).get(lesson.id, (True, None))
     if available:
         return None
     return reason

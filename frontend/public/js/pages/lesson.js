@@ -86,7 +86,7 @@ runPage(async () => {
     ({ lesson } = await apiRequest(lessonApiPath(courseId, lessonId)));
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) {
-      window.location.replace('/courses.html');
+      window.location.replace(`/course.html?course=${courseId}`);
       return;
     }
     throw error;

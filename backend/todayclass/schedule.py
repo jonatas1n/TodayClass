@@ -2,7 +2,7 @@ from datetime import timedelta, timezone
 from zoneinfo import ZoneInfo
 
 SAO_PAULO = ZoneInfo('America/Sao_Paulo')
-PREVIOUS_COURSE_REASON = 'Disponível depois de concluir o curso anterior'
+PREVIOUS_LESSON_REASON = 'Disponível depois de concluir a aula anterior'
 
 
 def as_utc(moment):
@@ -36,7 +36,7 @@ def course_requirements_met(course):
 
 
 def apply_completion_state(course, moment):
-    # Completion is never revoked: it is what unlocks the next course, so new content must not re-lock it.
+    # Completion stays once earned, even if a lesson or question is added later.
     if course.completed_at is not None:
         return False
     if not course_requirements_met(course):
@@ -51,23 +51,25 @@ def completed_on(course):
     return sao_paulo_date(course.completed_at).isoformat()
 
 
-def course_availability(previous_course, today):
-    if previous_course is None:
+def lesson_availability(previous_lesson, today):
+    if previous_lesson is None:
         return True, None
-    if previous_course.completed_at is None:
-        return False, PREVIOUS_COURSE_REASON
-    unlock_on = sao_paulo_date(previous_course.completed_at) + timedelta(days=1)
+    if previous_lesson.completed_at is None:
+        return False, PREVIOUS_LESSON_REASON
+    unlock_on = sao_paulo_date(previous_lesson.completed_at) + timedelta(days=1)
     if today >= unlock_on:
         return True, None
     return False, f'Disponível em {unlock_on.strftime("%d/%m/%Y")}'
 
 
-def availability_by_course_id(courses, today):
-    # Empty courses can never be completed, so they must not gate the courses after them.
+def availability_by_lesson_id(lessons, today):
     availability = {}
-    gating_course = None
-    for course in courses:
-        availability[course.id] = course_availability(gating_course, today)
-        if course_has_content(course):
-            gating_course = course
+    previous_lesson = None
+    for lesson in lessons:
+        if lesson.is_completed:
+            availability[lesson.id] = (True, None)
+            previous_lesson = lesson
+            continue
+        availability[lesson.id] = lesson_availability(previous_lesson, today)
+        previous_lesson = lesson
     return availability

@@ -10,9 +10,6 @@ function emptyState() {
 }
 
 function courseSubtitle(course) {
-  if (!course.is_available) {
-    return course.unavailable_reason;
-  }
   if (course.completed_at) {
     return 'Concluído';
   }
@@ -27,13 +24,13 @@ function courseRow(course) {
   if (subtitle) {
     body.push(element('span', { className: 'course-row__subtitle', text: subtitle }));
   }
-  const rowClass = course.is_available ? 'course-row' : 'course-row course-row--locked';
-  const marker = course.is_available ? 'chevron-right' : 'lock';
-  const attributes = course.is_available ? { href: `/course.html?course=${course.id}` } : {};
-  const row = element(course.is_available ? 'a' : 'div', { className: rowClass, attributes }, [
+  const row = element('a', {
+    className: 'course-row',
+    attributes: { href: `/course.html?course=${course.id}` },
+  }, [
     element('span', { className: 'course-row__icon', text: course.name.slice(0, 1), attributes: { 'aria-hidden': 'true' } }),
     element('span', { className: 'course-row__body' }, body),
-    element('span', { className: 'course-row__meta' }, [lessonCountLabel(course.lesson_count), icon(marker)]),
+    element('span', { className: 'course-row__meta' }, [lessonCountLabel(course.lesson_count), icon('chevron-right')]),
   ]);
   return element('li', {}, [row]);
 }

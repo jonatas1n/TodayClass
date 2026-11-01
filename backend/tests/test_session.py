@@ -1,37 +1,65 @@
 from conftest import create_user
+from werkzeug.security import generate_password_hash
 
+from todayclass import create_app
+from todayclass.models import User, db
 from todayclass.validation import ADMIN_ROLE
 
 
-def test_session_reports_setup_needed_without_users(api):
+def test_serverless_sqlite_initializes_schema_on_startup(tmp_path):
+    database_path = tmp_path / 'todayclass.db'
+    app = create_app({
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{database_path}',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'SECRET_KEY': 'test-secret',
+        'INITIALIZE_DATABASE_ON_STARTUP': True,
+        'TESTING': True,
+    })
+
+    response = app.test_client().get('/api/session')
+
+    assert response.status_code == 200
+    assert response.get_json()['needs_setup'] is False
+
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
+
+
+def test_serverless_sqlite_provisions_configured_admin(tmp_path, monkeypatch):
+    database_path = tmp_path / 'todayclass.db'
+    monkeypatch.setenv('VERCEL', '1')
+    monkeypatch.setenv('SERVERLESS_ADMIN_USERNAME', 'owner@example.com')
+    monkeypatch.setenv('SERVERLESS_ADMIN_PASSWORD_HASH', generate_password_hash('test-password'))
+    app = create_app({
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{database_path}',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'SECRET_KEY': 'test-secret',
+        'INITIALIZE_DATABASE_ON_STARTUP': True,
+        'TESTING': True,
+    })
+
+    with app.app_context():
+        owner = User.query.filter_by(username='owner@example.com').one()
+
+        assert owner.role == ADMIN_ROLE
+        assert owner.check_password('test-password')
+        db.session.remove()
+        db.drop_all()
+
+
+def test_session_never_offers_public_setup(api):
     payload = api.refresh_session()
 
     assert payload['user'] is None
-    assert payload['needs_setup'] is True
+    assert payload['needs_setup'] is False
     assert payload['csrf_token']
 
 
-def test_setup_creates_admin_and_signs_in(api):
+def test_public_setup_route_is_not_available(api):
     response = api.post('/api/setup', {'username': 'admin', 'password': 'senha-segura'})
 
-    assert response.status_code == 201
-    assert response.get_json()['user']['role'] == ADMIN_ROLE
-    assert api.refresh_session()['needs_setup'] is False
-
-
-def test_setup_is_closed_after_first_user(api):
-    create_user('admin', ADMIN_ROLE)
-
-    response = api.post('/api/setup', {'username': 'outro', 'password': 'senha-segura'})
-
     assert response.status_code == 404
-
-
-def test_setup_rejects_short_password(api):
-    response = api.post('/api/setup', {'username': 'admin', 'password': 'curta'})
-
-    assert response.status_code == 400
-    assert response.get_json()['error'] == 'A senha deve ter pelo menos 8 caracteres.'
 
 
 def test_login_with_wrong_password_is_rejected(api):

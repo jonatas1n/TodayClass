@@ -23,17 +23,32 @@ function lessonBody(lesson) {
   return body;
 }
 
-function lessonRow(lesson, isAdmin) {
-  const rowClass = lesson.is_completed ? 'lesson-row lesson-row--completed' : 'lesson-row';
-  const marker = element('span', { className: 'lesson-row__marker', attributes: { 'aria-hidden': 'true' } }, [
-    icon(lesson.is_completed ? 'circle-check' : 'circle'),
-  ]);
-  const link = element('a', { className: rowClass, attributes: { href: lessonUrl(lesson) } }, [
-    element('span', { className: 'lesson-row__main' }, [marker, lessonBody(lesson)]),
-    statusBadge(lesson.is_completed),
-  ]);
+function lessonIsOpen(lesson) {
+  return lesson.is_available !== false;
+}
 
-  const item = element('li', { className: 'lesson-list__item' }, [link]);
+function lessonRow(lesson, isAdmin) {
+  const open = isAdmin || lessonIsOpen(lesson);
+  const rowClass = open ? 'lesson-row' : 'lesson-row lesson-row--locked';
+  const completedClass = lesson.is_completed ? ' lesson-row--completed' : '';
+  const markerName = lesson.is_completed ? 'circle-check' : 'circle';
+  const marker = element('span', { className: 'lesson-row__marker', attributes: { 'aria-hidden': 'true' } }, [
+    icon(open ? markerName : 'lock'),
+  ]);
+  const body = lessonBody(lesson);
+  if (!open && lesson.unavailable_reason) {
+    body.append(element('span', { className: 'lesson-row__meta', text: lesson.unavailable_reason }));
+  }
+  const row = element(open ? 'a' : 'div', {
+    className: `${rowClass}${completedClass}`,
+    attributes: open ? { href: lessonUrl(lesson) } : {},
+  }, [
+    element('span', { className: 'lesson-row__main' }, [marker, body]),
+  ]);
+  if (open) {
+    row.append(statusBadge(lesson.is_completed));
+  }
+  const item = element('li', { className: 'lesson-list__item' }, [row]);
   if (isAdmin) {
     item.append(element('a', { className: 'lesson-list__edit', attributes: { href: editLessonUrl(lesson) } }, [
       icon('pencil'),

@@ -612,6 +612,19 @@
   color: var(--color-primary);
 }
 
+.lesson-row--locked {
+  cursor: default;
+}
+
+.lesson-row--locked:hover {
+  background: transparent;
+}
+
+.lesson-row--locked:hover .lesson-row__title,
+.lesson-row--locked .lesson-row__title {
+  color: var(--color-secondary);
+}
+
 .lesson-row__meta {
   font: var(--font-caption);
   color: var(--color-secondary);

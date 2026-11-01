@@ -22,6 +22,5 @@ runPage(async () => {
     window.location.replace(destinationAfterLogin(session.user));
     return;
   }
-  byId('setup-link').hidden = !session.needs_setup;
   onSubmit(byId('login-form'), byId('page-error'), submitLogin);
 });

@@ -1,5 +1,26 @@
+from todayclass.validation import ADMIN_ROLE
+
+
 def test_student_cannot_read_progress(student_api):
     assert student_api.get('/api/admin/progress').status_code == 403
+
+
+def test_anonymous_user_cannot_create_an_admin(api):
+    response = api.post(
+        '/api/admin/users',
+        {'username': 'outro-admin', 'password': 'senha-segura', 'role': ADMIN_ROLE},
+    )
+
+    assert response.status_code == 401
+
+
+def test_student_cannot_create_an_admin(student_api):
+    response = student_api.post(
+        '/api/admin/users',
+        {'username': 'outro-admin', 'password': 'senha-segura', 'role': ADMIN_ROLE},
+    )
+
+    assert response.status_code == 403
 
 
 def test_admin_reads_progress_rows(admin_api):
@@ -19,6 +40,16 @@ def test_admin_creates_student_login(admin_api):
     assert response.status_code == 201
     usernames = [user['username'] for user in admin_api.get('/api/admin/users').get_json()['users']]
     assert usernames == ['admin', 'pai']
+
+
+def test_admin_can_create_an_admin(admin_api):
+    response = admin_api.post(
+        '/api/admin/users',
+        {'username': 'outro-admin', 'password': 'senha-segura', 'role': ADMIN_ROLE},
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()['user']['role'] == ADMIN_ROLE
 
 
 def test_duplicate_username_is_rejected(admin_api):

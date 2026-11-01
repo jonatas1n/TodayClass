@@ -15,7 +15,7 @@ def link_payload(link):
     return {'id': link.id, 'title': link.title, 'url': link.url}
 
 
-def lesson_summary_payload(lesson):
+def lesson_summary_payload(lesson, is_available=True, unavailable_reason=None):
     return {
         'id': lesson.id,
         'course_id': lesson.course_id,
@@ -24,6 +24,8 @@ def lesson_summary_payload(lesson):
         'label': lesson.label,
         'is_completed': lesson.is_completed,
         'completed_at': utc_timestamp(lesson.completed_at),
+        'is_available': is_available,
+        'unavailable_reason': unavailable_reason,
     }
 
 
@@ -51,24 +53,29 @@ def question_payload(question):
     }
 
 
-def course_summary_payload(course, lesson_count, is_available, unavailable_reason):
+def course_summary_payload(course, lesson_count):
     return {
         'id': course.id,
         'name': course.name,
         'lesson_count': lesson_count,
         'completed_at': utc_timestamp(course.completed_at),
         'completed_on': completed_on(course),
-        'is_available': is_available,
-        'unavailable_reason': unavailable_reason,
+        'is_available': True,
+        'unavailable_reason': None,
     }
 
 
-def course_payload(course):
+def course_payload(course, lesson_availability=None):
+    lesson_availability = lesson_availability or {}
+    lessons = []
+    for lesson in course.lessons:
+        is_available, reason = lesson_availability.get(lesson.id, (True, None))
+        lessons.append(lesson_summary_payload(lesson, is_available, reason))
     return {
         'id': course.id,
         'name': course.name,
         'completed_at': utc_timestamp(course.completed_at),
         'completed_on': completed_on(course),
-        'lessons': [lesson_summary_payload(lesson) for lesson in course.lessons],
+        'lessons': lessons,
         'questions': [question_payload(question) for question in course.questions],
     }
