@@ -1,9 +1,9 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
 from todayclass.models import Course, db
-from todayclass.schedule import course_availability, course_requirements_met
+from todayclass.schedule import course_requirements_met, lesson_availability
 
 VALID_LESSON = {
     'day': '2',
@@ -98,37 +98,20 @@ def test_new_lesson_keeps_completion(admin_api, student_api):
     assert student_api.get('/api/courses/1').get_json()['course']['completed_at'] == completed_at
 
 
-def test_next_course_opens_on_the_following_sao_paulo_day(admin_api, student_api):
-    second = admin_api.post('/api/courses', {'name': 'História'}).get_json()['course']
-    lesson = admin_api.post(f"/api/courses/{second['id']}/lessons", VALID_LESSON).get_json()['lesson']
-
-    locked = student_api.get('/api/courses').get_json()['courses'][1]
-    assert locked['is_available'] is False
-    assert locked['unavailable_reason'] == 'Disponível depois de concluir o curso anterior'
-    denied = student_api.get(f"/api/courses/{second['id']}")
-    assert denied.status_code == 403
-    assert denied.get_json()['error'] == 'Disponível depois de concluir o curso anterior'
-    lesson_path = f"/api/courses/{second['id']}/lessons/{lesson['id']}"
-    assert student_api.get(lesson_path).status_code == 403
-    assert student_api.post(f'{lesson_path}/complete').status_code == 403
-
-    admin_row = admin_api.get('/api/courses').get_json()['courses'][1]
-    assert admin_row['is_available'] is True
-    assert admin_row['unavailable_reason'] is None
-    assert admin_api.get(f"/api/courses/{second['id']}").status_code == 200
+def test_next_lesson_waits_until_the_following_sao_paulo_day(student_api, admin_api):
+    created = admin_api.post('/api/courses/1/lessons', VALID_LESSON)
+    second_lesson_id = created.get_json()['lesson']['id']
 
     student_api.post('/api/courses/1/lessons/1/complete')
-    waiting = student_api.get('/api/courses').get_json()['courses'][1]
-    assert waiting['is_available'] is False
-    assert waiting['unavailable_reason'].startswith('Disponível em ')
 
-    course = db.session.get(Course, 1)
-    course.completed_at = course.completed_at - timedelta(days=2)
-    db.session.commit()
+    course = student_api.get('/api/courses/1').get_json()['course']
+    second_lesson = course['lessons'][1]
+    lesson_path = f'/api/courses/1/lessons/{second_lesson_id}'
 
-    opened = student_api.get('/api/courses').get_json()['courses'][1]
-    assert opened['is_available'] is True
-    assert opened['unavailable_reason'] is None
+    assert second_lesson['is_available'] is False
+    assert second_lesson['unavailable_reason'].startswith('Disponível em ')
+    assert student_api.get(lesson_path).status_code == 403
+    assert student_api.post(f'{lesson_path}/complete').status_code == 403
 
 
 def test_empty_course_never_meets_requirements():
@@ -141,8 +124,8 @@ def test_late_evening_in_sao_paulo_unlocks_the_next_local_day():
     stored = completed_at.astimezone(timezone.utc).replace(tzinfo=None)
     previous = SimpleNamespace(completed_at=stored)
 
-    same_day_open, same_day_reason = course_availability(previous, date(2026, 10, 26))
-    next_day_open, next_day_reason = course_availability(previous, date(2026, 10, 27))
+    same_day_open, same_day_reason = lesson_availability(previous, date(2026, 10, 26))
+    next_day_open, next_day_reason = lesson_availability(previous, date(2026, 10, 27))
 
     assert same_day_open is False
     assert same_day_reason == 'Disponível em 27/10/2026'
