@@ -1,5 +1,5 @@
 import { ApiError, apiRequest } from '../api.js';
-import { byId, element, formatTimestamp, icon, queryNumber, refreshIcons, runPage, setBusy, showError } from '../render.js';
+import { byId, element, formatTimestamp, hideLoading, icon, queryNumber, refreshIcons, runPage, setBusy, showError } from '../render.js';
 import { requireSession } from '../session.js';
 
 function lessonApiPath(courseId, lessonId) {
@@ -99,6 +99,7 @@ runPage(async () => {
   byId('lesson-content').innerHTML = lesson.content;
   renderLinks(lesson.links);
   byId('lesson-status').replaceChildren(statusContent(lesson, role));
+  hideLoading(byId('lesson-loading'));
   byId('lesson-article').hidden = false;
   refreshIcons();
 });

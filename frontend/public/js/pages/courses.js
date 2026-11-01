@@ -1,5 +1,5 @@
 import { apiRequest } from '../api.js';
-import { byId, element, icon, lessonCountLabel, runPage } from '../render.js';
+import { byId, element, icon, lessonCountLabel, releaseLoading, runPage } from '../render.js';
 import { requireSession } from '../session.js';
 
 function emptyState() {
@@ -43,18 +43,31 @@ function courseList(courses) {
   return [head, element('ul', { className: 'course-list' }, courses.map(courseRow))];
 }
 
-runPage(async () => {
-  const session = await requireSession();
-  const { courses } = await apiRequest('/api/courses');
+function totalLessonCount(courses) {
+  return courses.reduce((total, course) => total + course.lesson_count, 0);
+}
 
-  byId('course-count').textContent = courses.length;
-  byId('lesson-count').textContent = courses.reduce((total, course) => total + course.lesson_count, 0);
-  byId('new-course-button').hidden = session.user.role !== 'admin';
+function showCourseCounts(courses) {
+  byId('course-count').textContent = String(courses.length);
+  byId('lesson-count').textContent = String(totalLessonCount(courses));
+  releaseLoading(byId('course-stats'));
+}
 
+function renderCoursePanel(courses) {
   const panel = byId('course-panel');
   if (courses.length === 0) {
     panel.replaceChildren(emptyState());
+    releaseLoading(panel);
     return;
   }
   panel.replaceChildren(...courseList(courses));
+  releaseLoading(panel);
+}
+
+runPage(async () => {
+  const session = await requireSession();
+  const { courses } = await apiRequest('/api/courses');
+  showCourseCounts(courses);
+  byId('new-course-button').hidden = session.user.role !== 'admin';
+  renderCoursePanel(courses);
 });

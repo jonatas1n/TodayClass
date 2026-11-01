@@ -1,5 +1,5 @@
 import { ApiError, apiRequest } from '../api.js';
-import { byId, onSubmit, queryNumber, runPage } from '../render.js';
+import { byId, hideLoading, onSubmit, queryNumber, runPage } from '../render.js';
 import { requireSession } from '../session.js';
 
 function coursePage(courseId) {
@@ -26,4 +26,6 @@ runPage(async () => {
     });
     window.location.assign(coursePage(payload.course.id));
   });
+  hideLoading(byId('course-form-loading'));
+  byId('course-form').hidden = false;
 });

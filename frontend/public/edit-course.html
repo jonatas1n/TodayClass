@@ -42,7 +42,12 @@
       </div>
     </div>
     <div id="page-error" hidden></div>
-    <form class="form-stack" id="course-form">
+    <div class="skeleton-stack" id="course-form-loading" data-loading aria-busy="true">
+      <p class="visually-hidden" data-loading-label>Carregando curso</p>
+      <span class="skeleton skeleton--line skeleton--short" aria-hidden="true"></span>
+      <span class="skeleton skeleton--field" aria-hidden="true"></span>
+    </div>
+    <form class="form-stack" id="course-form" hidden>
       <label>
         Nome
         <input type="text" id="course-name" name="name" maxlength="120" required>

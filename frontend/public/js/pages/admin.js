@@ -1,5 +1,5 @@
 import { apiRequest } from '../api.js';
-import { byId, element, formatTimestamp, icon, onSubmit, refreshIcons, runPage, statusBadge } from '../render.js';
+import { byId, element, formatTimestamp, icon, onSubmit, refreshIcons, releaseLoading, runPage, statusBadge } from '../render.js';
 import { requireSession } from '../session.js';
 
 function progressRow(lesson) {
@@ -64,13 +64,26 @@ function userRow(user) {
 
 async function renderProgress() {
   const { lessons } = await apiRequest('/api/admin/progress');
-  const rows = lessons.length === 0 ? [emptyProgressRow()] : lessons.map(progressRow);
-  byId('progress-rows').replaceChildren(...rows);
+  const tableBody = byId('progress-rows');
+  if (lessons.length === 0) {
+    tableBody.replaceChildren(emptyProgressRow());
+    releaseLoading(byId('progress-panel'));
+    return;
+  }
+  tableBody.replaceChildren(...lessons.map(progressRow));
+  releaseLoading(byId('progress-panel'));
 }
 
 async function renderUsers() {
   const { users } = await apiRequest('/api/admin/users');
-  byId('user-list').replaceChildren(...users.map(userRow));
+  const list = byId('user-list');
+  if (users.length === 0) {
+    list.replaceChildren();
+    releaseLoading(list);
+    return;
+  }
+  list.replaceChildren(...users.map(userRow));
+  releaseLoading(list);
   refreshIcons();
 }
 

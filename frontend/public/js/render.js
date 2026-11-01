@@ -59,6 +59,29 @@ export function clearError(container) {
   container.hidden = true;
 }
 
+export function releaseLoading(region) {
+  region.removeAttribute('data-loading');
+  region.removeAttribute('aria-busy');
+  const loadingLabel = region.querySelector('[data-loading-label]');
+  if (!loadingLabel) {
+    return;
+  }
+  loadingLabel.remove();
+}
+
+export function hideLoading(region) {
+  region.hidden = true;
+  releaseLoading(region);
+}
+
+function dismissLoadingRegions() {
+  for (const region of document.querySelectorAll('[data-loading]')) {
+    region.hidden = true;
+    region.removeAttribute('aria-busy');
+    region.removeAttribute('data-loading');
+  }
+}
+
 export function statusBadge(isCompleted) {
   if (isCompleted) {
     return element('span', { className: 'status-badge status-badge--completed' }, [
@@ -104,6 +127,7 @@ export async function runPage(renderPage) {
     await renderPage();
   } catch (error) {
     console.error(error);
+    dismissLoadingRegions();
     showError(byId('page-error'), error.message);
   } finally {
     refreshIcons();

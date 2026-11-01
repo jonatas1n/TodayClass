@@ -41,21 +41,43 @@
         <p class="page-header__lead">Escolha um curso para ver as aulas.</p>
       </div>
       <div class="page-header__actions">
-        <div class="stat-group">
+        <div class="stat-group" id="course-stats" data-loading aria-busy="true">
+          <p class="visually-hidden" data-loading-label>Carregando totais</p>
           <div class="stat">
             <span class="stat__label">Cursos</span>
-            <span class="stat__value" id="course-count">0</span>
+            <span class="stat__value" id="course-count"><span class="skeleton skeleton--stat" aria-hidden="true"></span></span>
           </div>
           <span class="stat-group__divider" aria-hidden="true"></span>
           <div class="stat">
             <span class="stat__label">Aulas</span>
-            <span class="stat__value stat__value--accent" id="lesson-count">0</span>
+            <span class="stat__value stat__value--accent" id="lesson-count"><span class="skeleton skeleton--stat" aria-hidden="true"></span></span>
           </div>
         </div>
         <a class="button" id="new-course-button" href="/new-course.html" hidden><i data-lucide="plus" aria-hidden="true"></i>Criar curso</a>
       </div>
     </div>
-    <div class="list-panel" id="course-panel"></div>
+    <div class="list-panel" id="course-panel" data-loading aria-busy="true">
+      <p class="visually-hidden" data-loading-label>Carregando cursos</p>
+      <div class="list-panel__head" aria-hidden="true">
+        <span>Curso</span>
+        <span>Aulas</span>
+      </div>
+      <div class="skeleton-row" aria-hidden="true">
+        <span class="skeleton skeleton--icon"></span>
+        <span class="skeleton skeleton--line skeleton--grow"></span>
+        <span class="skeleton skeleton--meta"></span>
+      </div>
+      <div class="skeleton-row" aria-hidden="true">
+        <span class="skeleton skeleton--icon"></span>
+        <span class="skeleton skeleton--line skeleton--medium skeleton--grow"></span>
+        <span class="skeleton skeleton--meta"></span>
+      </div>
+      <div class="skeleton-row" aria-hidden="true">
+        <span class="skeleton skeleton--icon"></span>
+        <span class="skeleton skeleton--line skeleton--short skeleton--grow"></span>
+        <span class="skeleton skeleton--meta"></span>
+      </div>
+    </div>
   </main>
   <script>
     (function registerInstallServiceWorker() {

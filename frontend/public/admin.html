@@ -39,7 +39,8 @@
       </div>
     </div>
     <div id="page-error" hidden></div>
-    <div class="table-panel">
+    <div class="table-panel" id="progress-panel" data-loading aria-busy="true">
+      <p class="visually-hidden" data-loading-label>Carregando progresso</p>
       <table>
         <thead>
           <tr>
@@ -50,13 +51,45 @@
             <th class="data-table__numeric">Links</th>
           </tr>
         </thead>
-        <tbody id="progress-rows"></tbody>
+        <tbody id="progress-rows">
+          <tr aria-hidden="true">
+            <td><span class="skeleton skeleton--line skeleton--medium"></span></td>
+            <td><span class="skeleton skeleton--line"></span></td>
+            <td><span class="skeleton skeleton--line skeleton--short"></span></td>
+            <td><span class="skeleton skeleton--line skeleton--medium"></span></td>
+            <td><span class="skeleton skeleton--number"></span></td>
+          </tr>
+          <tr aria-hidden="true">
+            <td><span class="skeleton skeleton--line skeleton--short"></span></td>
+            <td><span class="skeleton skeleton--line skeleton--medium"></span></td>
+            <td><span class="skeleton skeleton--line skeleton--short"></span></td>
+            <td><span class="skeleton skeleton--line skeleton--short"></span></td>
+            <td><span class="skeleton skeleton--number"></span></td>
+          </tr>
+          <tr aria-hidden="true">
+            <td><span class="skeleton skeleton--line"></span></td>
+            <td><span class="skeleton skeleton--line skeleton--short"></span></td>
+            <td><span class="skeleton skeleton--line skeleton--short"></span></td>
+            <td><span class="skeleton skeleton--line skeleton--medium"></span></td>
+            <td><span class="skeleton skeleton--number"></span></td>
+          </tr>
+        </tbody>
       </table>
     </div>
 
     <section class="section">
       <h2 class="section__title">Usuários</h2>
-      <div class="user-list" id="user-list"></div>
+      <div class="user-list" id="user-list" data-loading aria-busy="true">
+        <p class="visually-hidden" data-loading-label>Carregando usuários</p>
+        <div class="skeleton-card" aria-hidden="true">
+          <span class="skeleton skeleton--line skeleton--medium"></span>
+          <span class="skeleton skeleton--field"></span>
+        </div>
+        <div class="skeleton-card" aria-hidden="true">
+          <span class="skeleton skeleton--line skeleton--short"></span>
+          <span class="skeleton skeleton--field"></span>
+        </div>
+      </div>
     </section>
 
     <section class="section">

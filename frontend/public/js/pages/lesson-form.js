@@ -1,5 +1,5 @@
 import { ApiError, apiRequest } from '../api.js';
-import { byId, element, icon, onSubmit, queryNumber, runPage } from '../render.js';
+import { byId, element, hideLoading, icon, onSubmit, queryNumber, runPage } from '../render.js';
 import { requireSession } from '../session.js';
 
 const LINK_ROW_COUNT = 4;
@@ -98,5 +98,6 @@ runPage(async () => {
     const { lesson: savedLesson } = await saveLesson(courseId, lessonId, lessonBody(fields));
     window.location.assign(`/lesson.html?course=${courseId}&lesson=${savedLesson.id}`);
   });
+  hideLoading(byId('form-loading'));
   byId('form-content').hidden = false;
 });

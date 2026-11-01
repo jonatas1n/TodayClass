@@ -38,6 +38,18 @@
       <a class="button button--small" id="edit-lesson-button" href="/lesson-form.html" hidden><i data-lucide="pencil" aria-hidden="true"></i>Editar</a>
     </div>
     <div id="page-error" hidden></div>
+    <div class="lesson-article" id="lesson-loading" data-loading aria-busy="true">
+      <p class="visually-hidden" data-loading-label>Carregando aula</p>
+      <div class="skeleton-stack" aria-hidden="true">
+        <span class="skeleton skeleton--line skeleton--short"></span>
+        <span class="skeleton skeleton--headline"></span>
+        <span class="skeleton skeleton--line"></span>
+        <span class="skeleton skeleton--line skeleton--medium"></span>
+        <span class="skeleton skeleton--line skeleton--short"></span>
+        <span class="skeleton skeleton--block"></span>
+        <span class="skeleton skeleton--line skeleton--medium"></span>
+      </div>
+    </div>
     <article class="lesson-article" id="lesson-article" hidden>
       <header class="lesson-article__header">
         <p class="lesson-article__eyebrow" id="lesson-course-name"></p>

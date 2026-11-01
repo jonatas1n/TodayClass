@@ -1,5 +1,5 @@
 import { ApiError, apiRequest } from '../api.js';
-import { byId, element, formatTimestamp, icon, lessonCountLabel, onSubmit, queryNumber, refreshIcons, runPage, statusBadge } from '../render.js';
+import { byId, element, formatTimestamp, hideLoading, icon, lessonCountLabel, onSubmit, queryNumber, refreshIcons, runPage, statusBadge } from '../render.js';
 import { requireSession } from '../session.js';
 
 function lessonUrl(lesson) {
@@ -211,6 +211,7 @@ function showCourse(course, isAdmin) {
   renderStatus(course);
   renderLessons(course.lessons, isAdmin);
   renderQuestions(course, isAdmin, (updated) => showCourse(updated, isAdmin));
+  hideLoading(byId('course-loading'));
   byId('course-content').hidden = false;
   refreshIcons();
 }
